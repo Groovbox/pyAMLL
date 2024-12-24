@@ -123,9 +123,10 @@ def display_words(line, curr_word:int):
     print(f"Start time: {selected_word.start_time} | End time: {selected_word.end_time}")
 
 def display_player():
+    console.print("[bold red]⏸︎[/bold red]" if not player.player.is_playing() else "[bold green]⏵︎[/bold green]", end="\t")
     print(player.get_timestamp(), end="\t")
     print(round(player.playback_speed,2))
-    print("[bold red]⏸︎[/bold red]⏵︎" if not player.player.is_playing() else "⏸︎[bold green]⏵︎[/bold green]")
+    
 
 
 def main():
