@@ -6,9 +6,12 @@ import vlc
 from vlc import State
 import time
 import threading
+from enum import Enum
 
-console = Console()
-
+class PlayerState(Enum):
+    PLAYING = 1
+    PAUSED = 2
+    STOPPED = 3
 
 class MusicPlayer:
     def __init__(self):
@@ -18,6 +21,7 @@ class MusicPlayer:
         self.playback_speed = 1.0  # Current playback speed
         self.file = ""
         self.player:vlc.MediaPlayer = None
+        self.cstate:PlayerState = PlayerState.STOPPED
     
     def set_file(self, file_path):
         self.file = file_path
@@ -30,23 +34,27 @@ class MusicPlayer:
         self.last_known_time = self.player.get_time()
         self.last_real_time = time.time()
         self.set_speed(self.playback_speed)
+        self.cstate = PlayerState.PLAYING
 
     def pause(self):
         if self.player.is_playing():
             self.update_time()  # Save the current playback position
             self.player.pause()
             self.last_real_time = None
+            self.cstate = PlayerState.PAUSED
 
     def resume(self):
         if not self.player.is_playing():
             self.last_real_time = time.time()  # Update the real-time tracker
             self.player.play()
+            self.cstate = PlayerState.PLAYING
 
 
     def stop(self):
         self.player.stop()
         self.last_known_time = 0
         self.last_real_time = None
+        self.cstate = PlayerState.STOPPED
 
     def set_speed(self, speed):
         self.playback_speed = speed
@@ -70,6 +78,13 @@ class MusicPlayer:
     def seek(self, offset_seconds):
         """Seek forward or backward by the specified offset in seconds."""
         current_time_ms = self.player.get_time()  # Current time in milliseconds
+
+        if self.cstate == PlayerState.STOPPED or self.cstate == PlayerState.PAUSED:
+            new_time_ms = current_time_ms + (offset_seconds * 1000)  # Calculate new time
+            self.player.set_time(int(new_time_ms))
+            self.last_known_time = new_time_ms
+            return
+        
         if current_time_ms >= 0:
             new_time_ms = current_time_ms + (offset_seconds * 1000)  # Calculate new time
             new_time_ms = max(0, new_time_ms)  # Ensure the new time is not negative
@@ -77,9 +92,10 @@ class MusicPlayer:
             self.last_known_time = new_time_ms  # Update last known time
             self.last_real_time = time.time()  # Reset the real-time tracker
 
-player = MusicPlayer()
-FILE = "/server/mnt/data/Music/Music/Halsey/Manic/9. Without Me.opus"
-player.set_file(FILE)
+
+# player = MusicPlayer()
+# FILE = "/server/mnt/data/Music/Music/Halsey/Manic/9. Without Me.opus"
+# player.set_file(FILE)
 
 def getch():
     old_settings = termios.tcgetattr(0)
@@ -92,40 +108,40 @@ def getch():
         termios.tcsetattr(0, termios.TCSANOW, old_settings)
         return ch
 
-def display_lines(lines, curr_line:int):
-    current_line = lines[curr_line]
+# def display_lines(lines, curr_line:int):
+#     current_line = lines[curr_line]
 
-    if curr_line > 0:
-        print(curr_line-1, "  ", lines[curr_line -1 ])
-    else:
-        print("-")
+#     if curr_line > 0:
+#         print(curr_line-1, "  ", lines[curr_line -1 ])
+#     else:
+#         print("-")
     
-    console.print(str(curr_line), "  ", str(current_line), style="bold red")
+#     console.print(str(curr_line), "  ", str(current_line), style="bold red")
 
-    if curr_line < len(lines) - 1:
-        print(curr_line+1, "  ", lines[curr_line+1])
+#     if curr_line < len(lines) - 1:
+#         print(curr_line+1, "  ", lines[curr_line+1])
 
-def display_words(line, curr_word:int):
+# def display_words(line, curr_word:int):
 
-    _index = 0
-    selected_word = line.elements[curr_word]
-    for word in line.elements:
-        if word.index > _index:
-            print(" ", end="")
-        _index = word.index
+#     _index = 0
+#     selected_word = line.elements[curr_word]
+#     for word in line.elements:
+#         if word.index > _index:
+#             print(" ", end="")
+#         _index = word.index
 
-        if line.elements.index(word) == curr_word:
-            console.print(f"[bold red]{word}[/bold red]", end="")
-        else:
-            print(word, end="")
+#         if line.elements.index(word) == curr_word:
+#             console.print(f"[bold red]{word}[/bold red]", end="")
+#         else:
+#             print(word, end="")
         
-    print("\n")
-    print(f"Start time: {selected_word.start_time} | End time: {selected_word.end_time}")
+#     print("\n")
+#     print(f"Start time: {selected_word.start_time} | End time: {selected_word.end_time}")
 
-def display_player():
-    console.print("[bold red]⏸︎[/bold red]" if not player.player.is_playing() else "[bold green]⏵︎[/bold green]", end="\t")
-    print(player.get_timestamp(), end="\t")
-    print(round(player.playback_speed,2))
+# def display_player():
+#     console.print("[bold red]⏸︎[/bold red]" if not player.player.is_playing() else "[bold green]⏵︎[/bold green]", end="\t")
+#     print(player.get_timestamp(), end="\t")
+#     print(round(player.playback_speed,2))
     
 
 
@@ -222,4 +238,11 @@ def main():
             line_counter = len(lines) - 1
         
 
-main()
+if __name__ == "__main__":
+    file = "music.opus"
+    player = MusicPlayer()
+    player.set_file(file)
+    player.play()
+    print(player.player.get_length())
+    while True:
+        pass

@@ -49,3 +49,26 @@ Sidebar {
   Sidebar.-hidden {
     display: none;
   }
+
+PlayerBox {
+
+    padding: 0 1;
+    height: 5;
+    border: thick $background 80%;
+    background: $surface;
+    dock: bottom;
+}
+
+#seek_buttons {
+  width: auto;
+  margin-right: 1;
+}
+
+#total_time {
+  margin-right:1;
+}
+
+PlayerBox > Button, #seek_buttons > Button {
+    background: #0d1117;
+    max-width: 4;
+}
