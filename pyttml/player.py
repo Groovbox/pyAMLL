@@ -93,10 +93,6 @@ class MusicPlayer:
             self.last_real_time = time.time()  # Reset the real-time tracker
 
 
-# player = MusicPlayer()
-# FILE = "/server/mnt/data/Music/Music/Halsey/Manic/9. Without Me.opus"
-# player.set_file(FILE)
-
 def getch():
     old_settings = termios.tcgetattr(0)
     new_settings = old_settings[:]
