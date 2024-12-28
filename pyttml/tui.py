@@ -1,12 +1,12 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Footer, Header, Tabs, Tab, Static, TextArea, Button, Label, Input, ProgressBar, Digits, ListItem, ListView
+from textual.widgets import Static, TextArea, Button, Label, Input, ProgressBar, Digits, ListItem, ListView
 from textual.containers import Horizontal, Grid, Vertical
 from textual.screen import Screen, ModalScreen
-import vlc
 from player import MusicPlayer, PlayerState
 import time
 from textual.reactive import reactive
 from textual import events
+from textual.geometry import Size
 
 CURR_LYRICS = ""
 PLAYER = MusicPlayer()
@@ -95,22 +95,46 @@ class PlayerBox(Horizontal):
         yield Horizontal(
             Button("⏮", id="rewind_button"),
             Button("⏭", id="forward_button"),
-            id="seek_buttons"
+            id="seek_buttons",
+            classes="button_group"
         )
         yield Horizontal(
             Button("⏪", id="decrease_speed_button"),
             Button("1.0", id="speed_reset"),
             Button("⏩", id="increase_speed_button"),
-            id="speed_controls"
+            id="speed_controls",
+            classes="button_group"
         )
         yield Digits("00:00.00",id="current_time")
-        yield ProgressBar(id="progress_bar", show_eta=False)
-        yield Label("00:00:000", id="total_time")
+        yield Vertical(
+            ProgressBar(id="progress_bar", show_eta=False, show_percentage=False),
+            Horizontal (
+                Button("0", id="seek_pos_0", classes="position-button"),
+                Button("1", id="seek_pos_1", classes="position-button"),
+                Button("2", id="seek_pos_2", classes="position-button"),
+                Button("3", id="seek_pos_3", classes="position-button"),
+                Button("4", id="seek_pos_4", classes="position-button"),
+                Button("5", id="seek_pos_5", classes="position-button"),
+                Button("6", id="seek_pos_6", classes="position-button"),
+                Button("7", id="seek_pos_7", classes="position-button"),
+                Button("8", id="seek_pos_8", classes="position-button"),
+                Button("9", id="seek_pos_9", classes="position-button"),
+                id="position_control"
+            )
+        )
+        
+        yield Label("00:00.00", id="total_time")
         yield Button("📂", id="open_file", tooltip="Enter path of music file.")
+
+        yield Horizontal(
+            Button("🔉", id="vol_down_button", tooltip="Decrease Volume"),
+            Button("🔊", id="vol_up_button", tooltip="Increase Volume"),
+            classes="button_group"
+        )
     
     def watch_time(self, time):
         minutes, seconds = divmod(time, 60)
-        hours, minutes = divmod(minutes, 60)
+        _,minutes = divmod(minutes, 60)
         digit_widget = self.query_one("#current_time", Digits)
         digit_widget.update(f"{minutes:02.0f}:{seconds:05.2f}")
 
@@ -141,6 +165,7 @@ class PlayerBox(Horizontal):
                 PLAYER.play()
                 self.query_one("#progress_bar").total = PLAYER.player.get_length() / 1000
                 self.query_one("#play_button").label = "⏸"
+                self.query_one("#play_button").variant = "success"
                 t_time_label = self.query_one("#total_time", Label)
                 total_time = PLAYER.player.get_length() / 1000 # in seconds
                 minutes, seconds = divmod(total_time, 60)
@@ -150,11 +175,13 @@ class PlayerBox(Horizontal):
             elif PLAYER.cstate == PlayerState.PAUSED:
                 PLAYER.resume()
                 self.query_one("#play_button").label = "⏸"
+                self.query_one("#play_button").variant = "success"
                 return
             
             elif PLAYER.cstate == PlayerState.PLAYING:
                 PLAYER.pause()
                 self.query_one("#play_button").label = "⏵"
+                self.query_one("#play_button").variant = "warning"
                 return
         
         elif event.button.id == "rewind_button":
@@ -168,16 +195,39 @@ class PlayerBox(Horizontal):
             speed_reset_button:Button = self.query_one("#speed_reset")
             speed_reset_button.label = str(PLAYER.playback_speed)
 
-        if event.button.id == "increase_speed_button":
+        elif event.button.id == "increase_speed_button":
             PLAYER.set_speed(PLAYER.playback_speed+0.25)
             speed_reset_button:Button = self.query_one("#speed_reset")
             speed_reset_button.label = str(PLAYER.playback_speed)
             
-        if event.button.id == "speed_reset":
+        elif event.button.id == "speed_reset":
             PLAYER.set_speed(1.0)
             speed_reset_button:Button = self.query_one("#speed_reset")
             speed_reset_button.label = str(PLAYER.playback_speed)
-            
+        
+        elif event.button.id == "vol_down_button":
+            PLAYER.change_volume(-10)
+        elif event.button.id == "vol_up_button":
+            PLAYER.change_volume(10)  
+        
+        elif "seek_pos_" in event.button.id:
+            partition = int(event.button.id.split("_")[-1])
+            PLAYER.seek(partition=partition)
+
+    def on_resize(self, event:events.Resize) -> None:
+        progress_bar = self.query_one(ProgressBar)
+        if self.size.width < 105:
+            self.query_one("#position_control").display = False
+            progress_bar.styles.margin = (1,1,0,1)
+            if self.size.width < 40:
+                self.query_one("#total_time").display = False
+            else:
+                self.query_one("#total_time").display = True
+        else:
+            self.query_one("#position_control").display = True
+            progress_bar.styles.margin = (0,1,0,1)
+            self.query_one("#total_time").display = True
+
 
 class Sidebar(Vertical):
     def compose(self) -> ComposeResult:
@@ -312,7 +362,6 @@ class Edit(Screen):
         yield Horizontal(
             Button("Load from File", name="load"),
             Button("Save", name="save"),
-            classes="button_group"
         )
 
         yield TextArea.code_editor("", language="text", classes="editor")
@@ -359,6 +408,9 @@ class MainApp(App):
     def on_mount(self) -> None:
         # Push screen
         self.switch_mode("edit")
+
+    
+
     
 
 

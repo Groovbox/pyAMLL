@@ -22,6 +22,14 @@ class MusicPlayer:
         self.file = ""
         self.player:vlc.MediaPlayer = None
         self.cstate:PlayerState = PlayerState.STOPPED
+        self.volume = 100
+    
+    def change_volume(self, volume_offset):
+        new_volume = self.volume + volume_offset
+        if new_volume > 100 or new_volume < 0:
+            volume_offset = 0
+        self.player.audio_set_volume(new_volume)
+        self.volume = new_volume
     
     def set_file(self, file_path):
         self.file = file_path
@@ -75,9 +83,15 @@ class MusicPlayer:
             current_time_s = self.last_known_time / 1000  # Convert to seconds
             return current_time_s
     
-    def seek(self, offset_seconds):
+    def seek(self, offset_seconds=None, partition=None):
         """Seek forward or backward by the specified offset in seconds."""
         current_time_ms = self.player.get_time()  # Current time in milliseconds
+
+        if offset_seconds is None and partition is not None:
+            total_length = self.player.get_length()
+            segment_length = total_length / 10
+            seek_pos = segment_length*partition
+            offset_seconds = (seek_pos-current_time_ms)/1000
 
         if self.cstate == PlayerState.STOPPED or self.cstate == PlayerState.PAUSED:
             new_time_ms = current_time_ms + (offset_seconds * 1000)  # Calculate new time
@@ -94,6 +108,7 @@ class MusicPlayer:
 
 
 def getch():
+
     old_settings = termios.tcgetattr(0)
     new_settings = old_settings[:]
     new_settings[3] &= ~termios.ICANON

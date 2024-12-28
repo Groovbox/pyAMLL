@@ -1,5 +1,27 @@
-.button_group {
-    height: 4;
+ProgressBar {
+  margin-right: 1;
+  margin-left: 1;
+}
+
+ProgressBar > Vertical {
+  margin-top: 1;
+}
+
+ProgressBar > Bar {
+  width: 1fr;
+}
+
+#position_control > Button {
+  max-width:10%;
+  border: none;
+}
+
+Digits {
+  width: auto;
+}
+
+Horizontal {
+    height: auto;
 }
 
 FileNamePicker {
@@ -57,6 +79,7 @@ PlayerBox {
     border: thick $background 80%;
     background: $surface;
     dock: bottom;
+    align-vertical: middle;
 }
 
 #seek_buttons, #speed_controls {
@@ -66,10 +89,20 @@ PlayerBox {
 
 #total_time {
   margin-right:1;
+  margin-left: 1;
+  margin-top: 1;
 }
 
 PlayerBox > Button, #seek_buttons > Button, #speed_controls > Button {
-    background: #0d1117;
+    max-width: 4;
+}
+
+.button_group {
+  width: auto;
+}
+
+.button_group > Button {
+  background: #0d1117;
     max-width: 4;
 }
 
