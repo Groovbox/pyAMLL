@@ -1,91 +1,19 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Static, TextArea, Button, Label, Input, ProgressBar, Digits, ListItem, ListView
-from textual.containers import Horizontal, Grid, Vertical
-from textual.screen import Screen, ModalScreen
+from textual.widgets import Static, TextArea, Button, Label, ProgressBar, Digits, ListItem, ListView
+from textual.containers import Horizontal, Vertical
+from textual.screen import Screen
 from player import MusicPlayer, PlayerState
 import time
 from textual.reactive import reactive
 from textual import events
-from textual.geometry import Size
+from ttml import Element, process_lyrics
+from components.filepicker import FileNamePicker
+from components.sidebar import Sidebar
+from components.carousel import WordCarousel, CarouselElement
 
 CURR_LYRICS = ""
 PLAYER = MusicPlayer()
 
-class CarouselElement(Vertical):
-    def __init__(self, *children, name = None, id = None, classes = None, disabled = False,
-                 start_time="00:00.00", end_time = "00.00.00", text = "Foo", is_active=False):
-    
-        self.start_time = start_time
-        self.end_time = end_time
-        self.text = text
-        self.is_active = is_active
-
-        super().__init__(*children, name=name, id=id, classes=classes, disabled=disabled)
-
-    def compose(self) -> ComposeResult:
-        yield Label(self.start_time, id="start_time")
-        yield Label(self.text, classes="element_text")
-        yield Label(self.end_time, id="end_time")
-    
-    def toggle_timestamps(self, hide=None):
-        start_time_label = self.query_one("#start_time")
-        end_time_label = self.query_one("#end_time")
-
-        if hide is not None and isinstance(hide, bool):
-            start_time_label.visible = not(hide)
-            end_time_label.visible = not(hide)
-            return
-        
-        start_time_label.visible = not(start_time_label.visible)
-        start_time_label.visible = not(start_time_label.visible)
-    
-    def set_state(self, active):
-        if active:
-            self.is_active = True
-            self.classes = "active"
-            self.toggle_timestamps(False)
-            return
-        
-        self.is_active = False
-        self.classes = ""
-        self.toggle_timestamps(True)
-    
-    def on_mount(self):
-        self.set_state(self.is_active)
-    
-    def __str__(self):
-        return self.text
-
-
-class WordCarousel(Vertical):
-    def compose(self) -> ComposeResult:
-        yield(Horizontal(id="root"))
-        
-    def push(self, element_text:str, active:bool=False):
-        root = self.query_one("#root")
-        root.mount(CarouselElement(text=element_text, is_active=active))
-
-
-class FileNamePicker(ModalScreen[str]):
-    def compose(self) -> ComposeResult:
-        yield Grid(
-            Label("Enter the path of file", id="file-picker-label"),
-            Input(placeholder="", id="file-picker-input"),
-            Button("Enter", variant="primary", id="submit"),
-            Button("Cancel", variant="error", id="cancel"),
-            id="dialog",
-        )
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "cancel":
-            self.dismiss("")
-        else:
-            location = self.query_one("#file-picker-input").value
-            if location.endswith(".txt"):
-                content = open(location).read()
-            else:
-                content = location
-            self.dismiss(content)
 
 class PlayerBox(Horizontal):
     time = reactive(0.0)
@@ -229,49 +157,14 @@ class PlayerBox(Horizontal):
             self.query_one("#total_time").display = True
 
 
-class Sidebar(Vertical):
-    def compose(self) -> ComposeResult:
-        yield Button(
-            label="Edit",
-            id="nav_edit_button",
-            tooltip="Switch to Edit Screen",
-        )
-        yield Button(
-            label="Sync",
-            id="nav_sync_button",
-            tooltip="Switch to Sync Screen",
-        )
-        yield Button(
-            label="Settings",
-            id="nav_settings_button",
-            tooltip="Switch to Settings Screen",
-        )
-    
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "nav_edit_button":
-            self.app.switch_mode("edit")
-        elif event.button.id == "nav_sync_button":
-            self.app.switch_mode("sync")
-        elif event.button.id == "nav_settings_button":
-            self.app.switch_mode("settings")
-    
-    def on_mount(self) -> None:
-        if self.app.current_mode == "edit":
-            self.query_one("#nav_edit_button").disabled = True
-        elif self.app.current_mode == "sync":
-            self.query_one("#nav_sync_button").disabled = True
-        elif self.app.current_mode == "settings":
-            self.query_one("#nav_settings_button").disabled = True
-
-
-
-
 class Sync(Screen):
     lyrics_saved_state:str = ""
+    active_line_index:int = 0
+
     def compose(self) -> ComposeResult:
-        yield Static("These are the lyrics", id="lyrics_label")
+        yield Static("No Lyrics Loaded", id="lyrics_label")
         yield Sidebar(id="sidebar")
-        yield WordCarousel(id="word-carousel")
+        yield WordCarousel(id="word-carousel", lyrics=CURR_LYRICS)
         yield(Horizontal(
             Button("←", id="prev_word_button"),
             Button("→", id="next_word_button"),            
@@ -294,17 +187,48 @@ class Sync(Screen):
                 break
 
     def next_word(self):
+        carousel = self.query_one(WordCarousel)
+        lines = self.query_one(ListView)._nodes
+        
         root = self.query_one("#root")
-        elements = root._nodes
+        elements:list[CarouselElement] = root._nodes
 
+        active_element:CarouselElement = None
+        word_index = 0
         for i,element in enumerate(elements):
             if element.is_active:
-                if i == len(elements) - 1:
-                    # TODO: Switch to next line if end element
-                    break
-                element.set_state(False)
-                elements[i+1].set_state(True)
+                active_element = element
+                word_index = i
                 break
+        
+        if word_index >= 2:
+            root.remove_children("CarouselElement:first-of-type")
+
+            # If the last word of the carousel is the last element
+            if CURR_LYRICS[carousel.last_word_line_index].is_last_element(carousel.last_word_index):
+                # Move carousel to the next line 
+                # Move the cursor to the first word
+                new_line_index = carousel.last_word_line_index + 1
+                new_word_index = 0                
+            else:
+                new_line_index = carousel.last_word_line_index
+                new_word_index = carousel.last_word_index + 1
+
+            carousel.push(CURR_LYRICS[new_line_index].elements[new_word_index])
+
+        active_element.set_state(False)
+        elements[i+1].set_state(True)
+
+
+        # Get the line index of the current active word
+        # If line index of current active word > current active line
+        # Set new line as active
+        current_active_element:Element = elements[i+1].element
+        current_active_line = current_active_element.line_index
+        if current_active_line > self.active_line_index:
+            lines[self.active_line_index].remove_class("lyric-line-active")
+            lines[current_active_line].add_class("lyric-line-active")
+            self.active_line_index += 1
     
     def next_line(self, word_index:int=0):
         curr_active = self.query_one(".lyric-line-active", Label)
@@ -326,7 +250,6 @@ class Sync(Screen):
             self.lyrics_saved_state = CURR_LYRICS
             self.query_one("#word-carousel").visible = False
             label.display = True
-            label.update(content="No lyrics loaded")
             return
 
         self.lyrics_saved_state = CURR_LYRICS
@@ -335,21 +258,21 @@ class Sync(Screen):
         label.display = False
 
         list_view = self.query_one(ListView)
-        lines = CURR_LYRICS.split("\n")
-        for i,line in enumerate(lines):
+        for i,line in enumerate(CURR_LYRICS):
+            line = str(line)
             if i == 0:
                 active_line_index = i
-                list_view.append(ListItem(Label(line, classes="lyric-line-active")))
+                list_view.append(ListItem(Label(line), classes="lyric-line-active"))
             else:
                 list_view.append(ListItem(Label(line)))
 
         carousel = self.query_one(WordCarousel)
-        for i, word in enumerate(lines[active_line_index].split(" ")):
+        for i, word in enumerate(CURR_LYRICS[active_line_index].elements):
             if i == 0:
                 carousel.push(word, True)
                 continue
             carousel.push(word, False)
-    
+      
 
 class Settings(Screen):
     def compose(self) -> ComposeResult:
@@ -375,9 +298,11 @@ class Edit(Screen):
                     self.query_one(".editor").text = content
 
             self.app.push_screen(FileNamePicker(), get_lyrics)
+
         elif event.button.name == "save":
             global CURR_LYRICS
-            CURR_LYRICS = self.query_one(".editor").text
+            CURR_LYRICS = process_lyrics(self.query_one(".editor").text)
+            self.app.notify("Saved Lyrics")
     
 
 class MainApp(App):
@@ -408,12 +333,6 @@ class MainApp(App):
     def on_mount(self) -> None:
         # Push screen
         self.switch_mode("edit")
-
-    
-
-    
-
-
 
 if __name__ == "__main__":
     app = MainApp()
