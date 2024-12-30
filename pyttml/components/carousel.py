@@ -50,7 +50,9 @@ class CarouselElement(Vertical):
 
 class WordCarousel(Vertical):
     last_word_line_index = 0
+    first_item_line_index = 0
     last_word_index = 0
+    first_word_index = 0
     lyrics:str = None
 
     def __init__(self, *children, name = None, id = None, classes = None, disabled = False, lyrics:str):
@@ -60,13 +62,23 @@ class WordCarousel(Vertical):
     def compose(self) -> ComposeResult:
         yield(Horizontal(id="root"))
         
-    def push(self, element:Element, active:bool=False):
+    def push(self, element:Element, active:bool=False, first=False):
         root = self.query_one("#root")
-        root.mount(CarouselElement(element=element, is_active=active))
+        _new_element = CarouselElement(element=element, is_active=active)        
+        root.mount(_new_element)
+
+        if first:
+            _old_first = root._nodes[0]
+            root.move_child(_new_element, before=_old_first)
+
 
         for line in self.lyrics:
             line:Line = line
             if element in line.elements:
+                if first:
+                    self.first_item_line_index = self.lyrics.index(line)
+                    self.first_word_index = line.elements.index(element)
+                    break
                 self.last_word_line_index = self.lyrics.index(line)
                 self.last_word_index = line.elements.index(element)
                 break

@@ -172,19 +172,54 @@ class Sync(Screen):
         ))
         yield ListView(id="lyric_list")
         yield PlayerBox(id="player_box")
+
+    # TODO: Rework carousel movement
     
     def prev_word(self):
+        carousel = self.query_one(WordCarousel)
+        lines = self.query_one(ListView)._nodes
+        
         root = self.query_one("#root")
-        elements = root._nodes
+        elements:list[CarouselElement] = root._nodes
 
+        active_element:CarouselElement = None
+        word_index = 0
         for i,element in enumerate(elements):
             if element.is_active:
-                if i == 0:
-                    # TODO: Switch to next line if end element
-                    break
-                element.set_state(False)
-                elements[i-1].set_state(True)
+                active_element = element
+                word_index = i
                 break
+        
+
+        if word_index >= 2:
+            root.remove_children("CarouselElement:last-of-type")
+
+            # If the first word of the carousel is the first element of the line
+            if carousel.first_word_index == 0:
+                # Move carousel to the previous line 
+                # Move the cursor to the last word
+                new_line_index = carousel.first_item_line_index - 1
+                new_word_index = len(CURR_LYRICS[new_line_index].elements)-1
+            else:
+                new_line_index = carousel.first_item_line_index
+                new_word_index = carousel.first_word_index - 1
+
+            carousel.push(CURR_LYRICS[new_line_index].elements[new_word_index])
+
+        active_element.set_state(False)
+        elements[i-1].set_state(True)
+
+
+        # Get the line index of the current active word
+        # If line index of current active word < current active line
+        # Set new line as active
+        current_active_element:Element = elements[i-1].element
+        current_active_line = current_active_element.line_index
+        if current_active_line > self.active_line_index:
+            lines[self.active_line_index].remove_class("lyric-line-active")
+            lines[current_active_line].add_class("lyric-line-active")
+            self.active_line_index -= 1
+    
 
     def next_word(self):
         carousel = self.query_one(WordCarousel)
