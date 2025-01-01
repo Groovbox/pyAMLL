@@ -169,9 +169,9 @@ class Sync(Screen):
         yield(Horizontal(
             Button("←", id="prev_word_button"),
             Button("→", id="next_word_button"),  
-            Button("F", id="set_start_time"),
-            Button("G", id="set_end_move"),
-            Button("H", id="set_end_time"),
+            Button("F", id="set_start_time", tooltip="Set timestamp as the startime of the word"),
+            Button("G", id="set_end_move", tooltip="Set timestamp as the end of current word and start time of the next word"),
+            Button("H", id="set_end_time", tooltip="Set Timestamp as the endtime of the current word and stay there"),
             id="carousel_control"
         ))
         yield PlayerBox(id="player_box")
