@@ -39,6 +39,7 @@ class MusicPlayer:
         self.last_real_time = time.time()
         self.set_speed(self.playback_speed)
         self.cstate = PlayerState.PLAYING
+        self.volume = self.player.audio_get_volume()
 
     def pause(self):
         if self.player.is_playing():

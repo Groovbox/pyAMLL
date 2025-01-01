@@ -1,5 +1,5 @@
 from textual.app import ComposeResult
-from textual.widgets import Label
+from textual.widgets import Label, ListItem, ListView
 from textual.containers import Horizontal, Vertical
 from ttml import VocalElement, Line, Lyrics
 from enum import Enum
@@ -174,4 +174,24 @@ class Carousel(Vertical):
         
         if active:
             self.active_item = _new_element
+
+
+class VerticalScroller(ListView):
+    lyrics:Lyrics = None
+    active_line_index:int = 0
+
+    def __init__(self, *children, initial_index = 0, name = None, id = None, classes = None, disabled = False, lyrics:Lyrics=lyrics):
+        self.lyrics = lyrics
+        super().__init__(*children, initial_index=initial_index, name=name, id=id, classes=classes, disabled=disabled)
+
+    def on_mount(self) -> None:
+        for line in self.lyrics.init_list:
+            self.mount(ListItem(Label(str(line))))
+        
+        self._nodes[self.active_line_index].add_class("lyric-line-active")
+
+    def scroll(self, scroll_direction:ScrollDirection):
+        self._nodes[self.active_line_index].remove_class("lyric-line-active")
+        self.active_line_index = self.active_line_index+scroll_direction.value
+        self._nodes[self.active_line_index].add_class("lyric-line-active")
 

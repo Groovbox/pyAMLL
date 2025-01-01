@@ -110,11 +110,11 @@ PlayerBox > Button, #seek_buttons > Button, #speed_controls > Button {
   max-width:6 !important;
 }
 
-WordCarousel {
+Carousel {
   height: auto;
 }
 
-WordCarousel > #root {
+Carousel > #root {
   height: auto;
 }
 
@@ -123,7 +123,7 @@ WordCarousel > #root {
   margin-bottom: 1;
 }
 
-CarouselElement {
+CarouselItem {
   padding: 1;
   width:auto;
   height:auto;
@@ -132,18 +132,18 @@ CarouselElement {
   margin: 1;
 }
 
-CarouselElement > #root > Label {
+CarouselItem > #root > Label {
   text-align: center;
 }
 
 
-CarouselElement > #root > .element_text {
+CarouselItem > #root > .element_text {
   color: #ffffff;
   text-style: none;
   text-align: center;
 }
 
-CarouselElement > #root {
+CarouselItem > #root {
   align-horizontal: center;
 }
 

@@ -4,7 +4,7 @@
 - [x] Move to Line when going out of bounds
 - [x] Auto Line Navigation
 - [x] Manual Line Navigation
-- [ ] Get audio level when initiating playback
+- [x] Get audio level when initiating playback
 - [ ] Set Keybinds
 - [ ] Pressing Enter in File Location Modals submits
 - [ ] Validation for file picker

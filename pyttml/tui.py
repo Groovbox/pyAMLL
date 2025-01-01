@@ -1,15 +1,15 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Static, TextArea, Button, Label, ProgressBar, Digits, ListItem, ListView
+from textual.widgets import Static, TextArea, Button, Label, ProgressBar, Digits, ListItem
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from player import MusicPlayer, PlayerState
 import time
 from textual.reactive import reactive
 from textual import events
-from ttml import VocalElement, process_lyrics, Lyrics
+from ttml import process_lyrics, Lyrics
 from components.filepicker import FileNamePicker
 from components.sidebar import Sidebar
-from components.carousel import Carousel, CarouselItem, ScrollDirection
+from components.carousel import Carousel, ScrollDirection, VerticalScroller
 
 
 CURR_LYRICS:Lyrics = None
@@ -171,17 +171,24 @@ class Sync(Screen):
             Button("→", id="next_word_button"),            
             id="carousel_control"
         ))
-        yield ListView(id="lyric_list")
         yield PlayerBox(id="player_box")
 
     
     def on_button_pressed(self, event:Button.Pressed):
         carousel:Carousel = self.query_one(Carousel)
+        vertical_scroller:VerticalScroller = self.query_one(VerticalScroller)
 
         if event.button.id == "next_word_button":
             carousel.move(ScrollDirection.forward)
         if event.button.id == "prev_word_button":
             carousel.move(ScrollDirection.backward)
+        
+        active_word_index = CURR_LYRICS.element_map[CURR_LYRICS.get_element_map_index(carousel.active_item.element)][1]
+
+        if vertical_scroller.active_line_index>active_word_index:
+            vertical_scroller.scroll(ScrollDirection.backward)
+        elif vertical_scroller.active_line_index<active_word_index:
+            vertical_scroller.scroll(ScrollDirection.forward)
 
     def on_screen_resume(self, event:events.ScreenResume):
         label:Static = self.query_one("#lyrics_label", Static)
@@ -189,7 +196,7 @@ class Sync(Screen):
         if CURR_LYRICS == self.lyrics_saved_state:
             return
 
-        if CURR_LYRICS == "":
+        if CURR_LYRICS.element_map == []:
             self.lyrics_saved_state = CURR_LYRICS
             self.query_one("#word-carousel").visible = False
             label.display = True
@@ -200,21 +207,7 @@ class Sync(Screen):
         self.remove_children(ListItem)
         label.display = False
 
-        list_view = self.query_one(ListView)
-        for i,line in enumerate(CURR_LYRICS):
-            line = str(line)
-            if i == 0:
-                self.active_line_index = i
-                list_view.append(ListItem(Label(line), classes="lyric-line-active"))
-            else:
-                list_view.append(ListItem(Label(line)))
-
-        # carousel = self.query_one(Carousel)
-        # for i, word in enumerate(CURR_LYRICS[self.active_line_index].elements):
-        #     if i == 0:
-        #         carousel.push(word, True)
-        #         continue
-        #     carousel.push(word, False)
+        self.mount(VerticalScroller(lyrics=CURR_LYRICS))
       
 
 class Settings(Screen):
@@ -234,7 +227,7 @@ class Edit(Screen):
 
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        global CURR_LYRICS
+        
         """Event handler called when a button is pressed."""
         if event.button.name == "load":
             def get_lyrics(content: str):
@@ -243,10 +236,11 @@ class Edit(Screen):
 
             self.app.push_screen(FileNamePicker(), get_lyrics)
 
-        elif event.button.name == "save":            
+        elif event.button.name == "save":       
+            global CURR_LYRICS     
             CURR_LYRICS = process_lyrics(self.query_one(".editor").text)
             self.app.notify("Saved Lyrics")
-    
+
 
 class MainApp(App):
     """A Textual app to create ttml files."""
@@ -272,9 +266,7 @@ class MainApp(App):
         "settings": Settings
     }
 
-
     def on_mount(self) -> None:
-        # Push screen
         self.switch_mode("edit")
 
 if __name__ == "__main__":
