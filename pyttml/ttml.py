@@ -7,8 +7,9 @@ class Vocal(Enum):
     PRIMARY = 1
     SECONDARY = 2
 
+
 @dataclass
-class Element:
+class VocalElement:
     word_index: int
     text: str
     line_index:int
@@ -16,29 +17,25 @@ class Element:
     start_time: float = 0
     end_time: float = 0
     
-    def get_start_time(self) -> float:
-        return self.start_time
-    
-    def get_end_time(self) -> float:
-        return self.end_time
-    
     def __str__(self):
         return self.text
 
 @dataclass
 class Line:
     index: int
-    elements: List[Element]
+    elements: List[VocalElement]
     vocal: Vocal = Vocal.STANDARD
     is_backing: bool = False
 
-    def get_start_time(self) -> float:
+    @property
+    def start_time(self) -> float:
         return self.elements[0].get_start_time()
 
-    def get_end_time(self) -> float:
+    @property
+    def end_time(self) -> float:
         return self.elements[-1].get_end_time()
 
-    def is_last_element(self, element:Element|int) -> bool:
+    def is_last_element(self, element:VocalElement|int) -> bool:
         if isinstance(element, int):
             if element == len(self.elements)-1:
                 return True
@@ -57,6 +54,27 @@ class Line:
                 index = self.elements[i].word_index
             _str += str(self.elements[i])
         return _str
+    
+class Lyrics(list):
+    element_map = []
+    def __init__(self, init_list:list[Line], *args):
+        for i,line in enumerate(init_list):
+            line:Line = line
+            for j, element in enumerate(line.elements):
+                self.element_map.append([element, i, j])
+        super().__init__(*args)
+    
+    def get_offset_element(self, element:VocalElement, offset:int) -> VocalElement:
+        for i,map_item in enumerate(self.element_map):
+            if element == map_item[0]:
+                return self.element_map[i+offset][0]
+    
+    def get_element_map_index(self, element:VocalElement) -> int:
+        for i,map_item in enumerate(self.element_map):
+            if element == map_item[0]:
+                return i
+        return 0
+            
 
 def dump_lyrics(line_objects) -> None:
     with open("dump.txt", "w") as f:
@@ -67,7 +85,7 @@ def dump_lyrics(line_objects) -> None:
                 f.write(f"Line Index: {elements.line_index}\n")
             f.write("\n\n")
 
-def process_lyrics(lyrics_str:str) -> list[Line]:
+def process_lyrics(lyrics_str:str) -> Lyrics:
 
     text_lines:list[str] = lyrics_str.split("\n")
     line_objects:list[Line] = []
@@ -91,11 +109,12 @@ def process_lyrics(lyrics_str:str) -> list[Line]:
             if '/' in word:
                 syllables = word.split('/')
                 for syllable_counter in range(len(syllables)):
-                    line.elements.append(Element(word_index=word_counter, text=syllables[syllable_counter], line_index=len(line_objects)))
+                    line.elements.append(VocalElement(word_index=word_counter, text=syllables[syllable_counter], line_index=len(line_objects)))
                 continue
             
-            line.elements.append(Element(word_index=word_counter, text=word, line_index=len(line_objects)))
+            line.elements.append(VocalElement(word_index=word_counter, text=word, line_index=len(line_objects)))
 
         line_objects.append(line)
     dump_lyrics(line_objects)
-    return line_objects
+
+    return Lyrics(line_objects)

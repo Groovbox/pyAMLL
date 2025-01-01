@@ -6,12 +6,13 @@ from player import MusicPlayer, PlayerState
 import time
 from textual.reactive import reactive
 from textual import events
-from ttml import Element, process_lyrics
+from ttml import VocalElement, process_lyrics, Lyrics
 from components.filepicker import FileNamePicker
 from components.sidebar import Sidebar
-from components.carousel import WordCarousel, CarouselElement
+from components.carousel import Carousel, CarouselItem, ScrollDirection
 
-CURR_LYRICS = ""
+
+CURR_LYRICS:Lyrics = None
 PLAYER = MusicPlayer()
 
 
@@ -158,13 +159,13 @@ class PlayerBox(Horizontal):
 
 
 class Sync(Screen):
-    lyrics_saved_state:str = ""
+    lyrics_saved_state:Lyrics = None
     active_line_index:int = 0
 
     def compose(self) -> ComposeResult:
         yield Static("No Lyrics Loaded", id="lyrics_label")
         yield Sidebar(id="sidebar")
-        yield WordCarousel(id="word-carousel", lyrics=CURR_LYRICS)
+        yield Carousel(id="word-carousel", lyrics=CURR_LYRICS)
         yield(Horizontal(
             Button("←", id="prev_word_button"),
             Button("→", id="next_word_button"),            
@@ -173,107 +174,14 @@ class Sync(Screen):
         yield ListView(id="lyric_list")
         yield PlayerBox(id="player_box")
 
-    # TODO: Rework carousel movement
-    
-    def prev_word(self):
-        carousel = self.query_one(WordCarousel)
-        lines = self.query_one(ListView)._nodes
-        
-        root = self.query_one("#root")
-        elements:list[CarouselElement] = root._nodes
-
-        active_element:CarouselElement = None
-        word_index = 0
-        for i,element in enumerate(elements):
-            if element.is_active:
-                active_element = element
-                word_index = i
-                break
-        
-
-        if word_index >= 2:
-            root.remove_children("CarouselElement:last-of-type")
-
-            # If the first word of the carousel is the first element of the line
-            if carousel.first_word_index == 0:
-                # Move carousel to the previous line 
-                # Move the cursor to the last word
-                new_line_index = carousel.first_item_line_index - 1
-                new_word_index = len(CURR_LYRICS[new_line_index].elements)-1
-            else:
-                new_line_index = carousel.first_item_line_index
-                new_word_index = carousel.first_word_index - 1
-
-            carousel.push(CURR_LYRICS[new_line_index].elements[new_word_index])
-
-        active_element.set_state(False)
-        elements[i-1].set_state(True)
-
-
-        # Get the line index of the current active word
-        # If line index of current active word < current active line
-        # Set new line as active
-        current_active_element:Element = elements[i-1].element
-        current_active_line = current_active_element.line_index
-        if current_active_line > self.active_line_index:
-            lines[self.active_line_index].remove_class("lyric-line-active")
-            lines[current_active_line].add_class("lyric-line-active")
-            self.active_line_index -= 1
-    
-
-    def next_word(self):
-        carousel = self.query_one(WordCarousel)
-        lines = self.query_one(ListView)._nodes
-        
-        root = self.query_one("#root")
-        elements:list[CarouselElement] = root._nodes
-
-        active_element:CarouselElement = None
-        word_index = 0
-        for i,element in enumerate(elements):
-            if element.is_active:
-                active_element = element
-                word_index = i
-                break
-        
-        if word_index >= 2:
-            root.remove_children("CarouselElement:first-of-type")
-
-            # If the last word of the carousel is the last element
-            if CURR_LYRICS[carousel.last_word_line_index].is_last_element(carousel.last_word_index):
-                # Move carousel to the next line 
-                # Move the cursor to the first word
-                new_line_index = carousel.last_word_line_index + 1
-                new_word_index = 0                
-            else:
-                new_line_index = carousel.last_word_line_index
-                new_word_index = carousel.last_word_index + 1
-
-            carousel.push(CURR_LYRICS[new_line_index].elements[new_word_index])
-
-        active_element.set_state(False)
-        elements[i+1].set_state(True)
-
-
-        # Get the line index of the current active word
-        # If line index of current active word > current active line
-        # Set new line as active
-        current_active_element:Element = elements[i+1].element
-        current_active_line = current_active_element.line_index
-        if current_active_line > self.active_line_index:
-            lines[self.active_line_index].remove_class("lyric-line-active")
-            lines[current_active_line].add_class("lyric-line-active")
-            self.active_line_index += 1
-    
-    def next_line(self, word_index:int=0):
-        curr_active = self.query_one(".lyric-line-active", Label)
-        curr_index = 0
     
     def on_button_pressed(self, event:Button.Pressed):
+        carousel:Carousel = self.query_one(Carousel)
+
         if event.button.id == "next_word_button":
-            self.next_word()
+            carousel.move(ScrollDirection.forward)
         if event.button.id == "prev_word_button":
-            self.prev_word()
+            carousel.move(ScrollDirection.backward)
 
     def on_screen_resume(self, event:events.ScreenResume):
         label:Static = self.query_one("#lyrics_label", Static)
@@ -296,17 +204,17 @@ class Sync(Screen):
         for i,line in enumerate(CURR_LYRICS):
             line = str(line)
             if i == 0:
-                active_line_index = i
+                self.active_line_index = i
                 list_view.append(ListItem(Label(line), classes="lyric-line-active"))
             else:
                 list_view.append(ListItem(Label(line)))
 
-        carousel = self.query_one(WordCarousel)
-        for i, word in enumerate(CURR_LYRICS[active_line_index].elements):
-            if i == 0:
-                carousel.push(word, True)
-                continue
-            carousel.push(word, False)
+        # carousel = self.query_one(Carousel)
+        # for i, word in enumerate(CURR_LYRICS[self.active_line_index].elements):
+        #     if i == 0:
+        #         carousel.push(word, True)
+        #         continue
+        #     carousel.push(word, False)
       
 
 class Settings(Screen):
@@ -326,6 +234,7 @@ class Edit(Screen):
 
     
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        global CURR_LYRICS
         """Event handler called when a button is pressed."""
         if event.button.name == "load":
             def get_lyrics(content: str):
@@ -334,8 +243,7 @@ class Edit(Screen):
 
             self.app.push_screen(FileNamePicker(), get_lyrics)
 
-        elif event.button.name == "save":
-            global CURR_LYRICS
+        elif event.button.name == "save":            
             CURR_LYRICS = process_lyrics(self.query_one(".editor").text)
             self.app.notify("Saved Lyrics")
     
