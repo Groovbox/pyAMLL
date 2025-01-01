@@ -19,6 +19,11 @@ class CarouselItem(Vertical):
         yield Label(self.element.text, classes="element_text")
         yield Label(str(self.element.end_time), id="end_time")
     
+    def update(self) -> None:
+        self.query_one("#start_time", Label).update(str(self.element.start_time))
+        self.query_one("#end_time", Label).update(str(self.element.end_time))
+
+
     def toggle_timestamps(self, hide=None):
         start_time_label = self.query_one("#start_time")
         end_time_label = self.query_one("#end_time")
@@ -75,7 +80,6 @@ class Carousel(Vertical):
         for i in range(5):
             self.push(self.lyrics.element_map[i][0], active=(i==0))
 
-
     def shift_cursor(self,scroll_direction:ScrollDirection) -> None:
         """
         Sets the next or the previous CarouselItem as active and current Item as Inactive
@@ -87,7 +91,6 @@ class Carousel(Vertical):
         new_active_item:CarouselItem = self.query_one("#root")._nodes[active_item_index+scroll_direction.value]
         new_active_item.set_state(True)
         self.active_item = new_active_item
-
     
     def move(self, scroll_direction:ScrollDirection) -> None:
         """

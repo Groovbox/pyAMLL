@@ -147,6 +147,10 @@ CarouselItem > #root {
   align-horizontal: center;
 }
 
+#carousel_control > Button {
+  max-width:3;
+}
+
 .active {
   background:rgb(255, 63, 121);
   padding: 0 1;
