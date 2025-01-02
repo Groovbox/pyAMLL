@@ -68,10 +68,19 @@ class MusicPlayer:
 
     def update_time(self):
         """Update the last known time based on real-time tracking."""
+        if self.player is None:
+            return
+
+        if self.last_known_time > self.player.get_length() and not self.player.is_playing():
+            self.cstate = PlayerState.STOPPED
+            return
+
         if self.last_real_time is not None:
             elapsed_real_time = time.time() - self.last_real_time
             self.last_known_time += elapsed_real_time * 1000 * self.playback_speed
             self.last_real_time = time.time()
+        
+        
 
     def get_timestamp(self):
         """Get the accurate current playback time in seconds."""

@@ -59,6 +59,15 @@ class PlayerBox(Horizontal):
         progress_bar: ProgressBar = self.query_one("#progress_bar", ProgressBar)
         progress_bar.progress = time_in_seconds
 
+        try:
+            if progress_bar.progress >= self.player.player.get_length()/1000:
+                self.query_one("#play_button").label = "⏵"
+                self.query_one("#play_button").variant = "warning"
+        except TypeError:
+            pass
+        except AttributeError:
+            pass
+
     def update_time(self) -> None:
         self.time = self.player.get_timestamp()
 
