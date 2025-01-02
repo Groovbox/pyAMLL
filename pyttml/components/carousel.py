@@ -3,6 +3,7 @@ from textual.widgets import Label, ListItem, ListView
 from textual.containers import Horizontal, Vertical
 from ttml import VocalElement, Line, Lyrics
 from enum import Enum
+from utils import convert_seconds_to_format as fsec
 
 
 class CarouselItem(Vertical):
@@ -15,13 +16,13 @@ class CarouselItem(Vertical):
         super().__init__(*children, name=name, id=id, classes=classes, disabled=disabled)
 
     def compose(self) -> ComposeResult:
-        yield Label(str(self.element.start_time), id="start_time")
+        yield Label(fsec(self.element.start_time), id="start_time")
         yield Label(self.element.text, classes="element_text")
-        yield Label(str(self.element.end_time), id="end_time")
+        yield Label(fsec(self.element.end_time), id="end_time")
     
     def update(self) -> None:
-        self.query_one("#start_time", Label).update(str(self.element.start_time))
-        self.query_one("#end_time", Label).update(str(self.element.end_time))
+        self.query_one("#start_time", Label).update(fsec(self.element.start_time))
+        self.query_one("#end_time", Label).update(fsec(self.element.end_time))
 
 
     def toggle_timestamps(self, hide=None):

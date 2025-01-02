@@ -10,6 +10,7 @@ from ttml import process_lyrics, Lyrics
 from components.filepicker import FileNamePicker
 from components.sidebar import Sidebar
 from components.carousel import Carousel, ScrollDirection, VerticalScroller
+from utils import convert_seconds_to_format as fsec
 
 
 CURR_LYRICS:Lyrics = None
@@ -61,15 +62,13 @@ class PlayerBox(Horizontal):
             classes="button_group"
         )
     
-    def watch_time(self, time):
-        minutes, seconds = divmod(time, 60)
-        _,minutes = divmod(minutes, 60)
+    def watch_time(self, time_in_seconds):
         digit_widget = self.query_one("#current_time", Digits)
-        digit_widget.update(f"{minutes:02.0f}:{seconds:05.2f}")
+        digit_widget.update(fsec(time_in_seconds))
 
         # Update progress bar
         progress_bar:ProgressBar = self.query_one("#progress_bar", ProgressBar)
-        progress_bar.progress = time
+        progress_bar.progress = time_in_seconds
         
 
     def update_time(self) -> None:
@@ -91,14 +90,13 @@ class PlayerBox(Horizontal):
         
         elif event.button.id == "play_button":
             if PLAYER.cstate == PlayerState.STOPPED:
+                file_length = PLAYER.player.get_length() / 1000
                 PLAYER.play()
-                self.query_one("#progress_bar").total = PLAYER.player.get_length() / 1000
+                self.query_one("#progress_bar").total = file_length
                 self.query_one("#play_button").label = "⏸"
                 self.query_one("#play_button").variant = "success"
                 t_time_label = self.query_one("#total_time", Label)
-                total_time = PLAYER.player.get_length() / 1000 # in seconds
-                minutes, seconds = divmod(total_time, 60)
-                t_time_label.update(content=f"{minutes:02,.0f}:{seconds:05.2f}")
+                t_time_label.update(content=fsec(file_length, show_milliseconds=False))
                 return
             
             elif PLAYER.cstate == PlayerState.PAUSED:
