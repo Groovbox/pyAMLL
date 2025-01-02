@@ -1,11 +1,17 @@
 from dataclasses import dataclass
 from typing import List
 from enum import Enum
+from pathlib import Path
+import json
 
 class Vocal(Enum):
     STANDARD = 0
     PRIMARY = 1
     SECONDARY = 2
+
+class ExportFormat(Enum):
+    APPLE_SWLRC = "swlrc.json"
+    TTML = "ttml"
 
 
 @dataclass
@@ -76,7 +82,52 @@ class Lyrics(list):
             if element == map_item[0]:
                 return i
         return 0
+    
+    def export(self, file:Path, format:ExportFormat) -> None:
+        if format == ExportFormat.APPLE_SWLRC:
+            content = parse_lyrics_to_swlrc(self)
+            with open(file, "w") as f:
+                f.write(json.dumps(content, indent=2))
+
             
+def parse_lyrics_to_swlrc(lyrics:Lyrics) -> dict:
+    swl = {
+        "StartTime": lyrics.element_map[0][0].start_time,
+        "EndTime": lyrics.element_map[-1][0].end_time,
+        "Type": "Syllable",
+        "VocalGroups": []
+    }
+
+    for line in lyrics.init_list:
+        line:Line = line
+
+        _lead_list = []
+
+        for i,element in enumerate(line.elements):
+            element:VocalElement = element
+            _is_part_of_word = False
+            try:
+                if line.elements[i+1].word_index == element.word_index:
+                    _is_part_of_word = True
+            except IndexError:
+                pass            
+
+            _lead_list.append({
+                "Text": element.text,
+                    "IsPartOfWord": _is_part_of_word,
+                    "StartTime": element.start_time,
+                    "EndTime": element.end_time
+            })
+        
+        swl["VocalGroups"].append({
+            "Type":"Vocal",
+            "OppositeAligned": (line.vocal == Vocal.SECONDARY),
+            "StartTime": line.start_time,
+            "EndTime": line.end_time,
+            "Lead": _lead_list
+        })
+    
+    return swl
 
 def dump_lyrics(line_objects) -> None:
     with open("dump.txt", "w") as f:
