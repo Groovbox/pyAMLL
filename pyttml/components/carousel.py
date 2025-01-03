@@ -1,7 +1,7 @@
 from textual.app import ComposeResult
 from textual.widgets import Label, ListItem, ListView
 from textual.containers import Horizontal, Vertical
-from ttml import VocalElement, Line, Lyrics
+from ttml import VocalElement, Lyrics
 from enum import Enum
 from utils import convert_seconds_to_format as fsec
 
@@ -66,20 +66,14 @@ class Carousel(Vertical):
     substitue_last:CarouselItem = None
     substitue_first:CarouselItem = None
 
-    lyrics:Lyrics = None
-
-    def __init__(self, *children, name = None, id = None, classes = None, disabled = False, lyrics:Lyrics):
-        self.lyrics = lyrics
-        super().__init__(*children, name=name, id=id, classes=classes, disabled=disabled)
-
     def compose(self) -> ComposeResult:
         yield(Horizontal(id="root"))
 
     
     def on_mount(self) -> None:
-        self.substitue_last = CarouselItem(element=self.lyrics.element_map[5][0])
+        self.substitue_last = CarouselItem(element=self.app.CURR_LYRICS.element_map[5][0])
         for i in range(5):
-            self.push(self.lyrics.element_map[i][0], active=(i==0))
+            self.push(self.app.CURR_LYRICS.element_map[i][0], active=(i==0))
 
     def shift_cursor(self,scroll_direction:ScrollDirection) -> None:
         """
@@ -100,40 +94,40 @@ class Carousel(Vertical):
         _forward = ScrollDirection.forward
         _backward = ScrollDirection.backward
 
-        active_item_map_index = self.lyrics.get_element_map_index(self.active_item.element)
+        active_item_map_index = self.app.CURR_LYRICS.get_element_map_index(self.active_item.element)
 
         if active_item_map_index == 0 and scroll_direction==_backward:
             return
         
-        if active_item_map_index == len(self.lyrics.element_map)-1 and scroll_direction==_forward:
+        if active_item_map_index == len(self.app.CURR_LYRICS.element_map)-1 and scroll_direction==_forward:
             return
 
         self.shift_cursor(scroll_direction)
 
-        active_item_map_index = self.lyrics.get_element_map_index(self.active_item.element)
+        active_item_map_index = self.app.CURR_LYRICS.get_element_map_index(self.active_item.element)
 
         if active_item_map_index <= 1 and scroll_direction==_backward:
             return
         
-        if active_item_map_index >= len(self.lyrics.element_map)-3 and scroll_direction == _backward:
+        if active_item_map_index >= len(self.app.CURR_LYRICS.element_map)-3 and scroll_direction == _backward:
             return
 
         elif active_item_map_index <= 2 and scroll_direction==_forward:
             return
         
-        if active_item_map_index >= len(self.lyrics.element_map)-2 and scroll_direction==_forward:
+        if active_item_map_index >= len(self.app.CURR_LYRICS.element_map)-2 and scroll_direction==_forward:
             return
         
         end_item:CarouselItem = self.query_one("#root")._nodes[0 if scroll_direction==_backward else -1]
 
-        if scroll_direction==_forward and self.lyrics.element_map[-1][0] == self.substitue_last.element:
+        if scroll_direction==_forward and self.app.CURR_LYRICS.element_map[-1][0] == self.substitue_last.element:
             self.push(self.substitue_last)
             self.substitue_last = None
             self.substitue_first = self.query_one("#root")._nodes[0]
             self.query_one("#root").remove_children("CarouselItem:first-of-type")
             return
     
-        sub_element = self.lyrics.get_offset_element(end_item.element, scroll_direction.value*2)
+        sub_element = self.app.CURR_LYRICS.get_offset_element(end_item.element, scroll_direction.value*2)
 
         if scroll_direction == _forward:        
             self.push(self.substitue_last)
@@ -156,11 +150,11 @@ class Carousel(Vertical):
             _active = False
             if i==2:
                 _active = True
-            self.push(self.lyrics.element_map[new_fist_index+i][0], active=_active)
+            self.push(self.app.CURR_LYRICS.element_map[new_fist_index+i][0], active=_active)
         
-        self.substitue_first = self.lyrics.element_map[new_fist_index-1][0]
-        self.substitue_last = self.lyrics.element_map[new_fist_index+5][0]
-        self.active_item = self.lyrics.element_map[new_fist_index+2]
+        self.substitue_first = self.app.CURR_LYRICS.element_map[new_fist_index-1][0]
+        self.substitue_last = self.app.CURR_LYRICS.element_map[new_fist_index+5][0]
+        self.active_item = self.app.CURR_LYRICS.element_map[new_fist_index+2]
         
     def push(self, element_or_item:VocalElement|CarouselItem, active:bool=False, first=False) -> None:
 
@@ -185,11 +179,11 @@ class VerticalScroller(ListView):
     active_line_index:int = 0
 
     def __init__(self, *children, initial_index = 0, name = None, id = None, classes = None, disabled = False, lyrics:Lyrics=lyrics):
-        self.lyrics = lyrics
+        self.app.CURR_LYRICS = lyrics
         super().__init__(*children, initial_index=initial_index, name=name, id=id, classes=classes, disabled=disabled)
 
     def on_mount(self) -> None:
-        for line in self.lyrics.init_list:
+        for line in self.app.CURR_LYRICS.init_list:
             self.mount(ListItem(Label(str(line))))
         
         self._nodes[self.active_line_index].add_class("lyric-line-active")
