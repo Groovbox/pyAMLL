@@ -28,10 +28,16 @@ class TTMLApp(App):
         ("v", "set_end_time", "Set end time"),
         ("q", "quit", "Quit the app")]
 
-    MODES = {
+    SCREENS = {
         "edit": EditScreen,
         "sync": SyncScreen,
         "settings": SettingsScreen
+    }
+
+    MODES = {
+        "edit": "edit",
+        "sync": "sync",
+        "settings": "settings"
     }
 
     def on_mount(self) -> None:

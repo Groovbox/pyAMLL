@@ -1,38 +1,19 @@
-from textual.app import ComposeResult
 from textual.widgets import Button
 from textual.containers import Vertical
 
 
-class Sidebar(Vertical):
-    def compose(self) -> ComposeResult:
-        yield Button(
-            label="Edit",
-            id="nav_edit_button",
-            tooltip="Switch to Edit Screen",
-        )
-        yield Button(
-            label="Sync",
-            id="nav_sync_button",
-            tooltip="Switch to Sync Screen",
-        )
-        yield Button(
-            label="Settings",
-            id="nav_settings_button",
-            tooltip="Switch to Settings Screen",
-        )
-    
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "nav_edit_button":
-            self.app.switch_mode("edit")
-        elif event.button.id == "nav_sync_button":
-            self.app.switch_mode("sync")
-        elif event.button.id == "nav_settings_button":
-            self.app.switch_mode("settings")
-    
+class Sidebar(Vertical):    
     def on_mount(self) -> None:
-        if self.app.current_mode == "edit":
-            self.query_one("#nav_edit_button").disabled = True
-        elif self.app.current_mode == "sync":
-            self.query_one("#nav_sync_button").disabled = True
-        elif self.app.current_mode == "settings":
-            self.query_one("#nav_settings_button").disabled = True
+        for screen in self.app.SCREENS.keys():
+            self.mount(Button(
+            label=screen.capitalize(),
+            id=f"nav_{screen}_button",
+            tooltip=f"Switch to {screen.capitalize} Screen",
+        ))
+            
+        current_mode = self.app.current_mode
+        self.query_one(f"#nav_{current_mode}_button").disabled = True
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id.startswith("nav_"):
+            self.app.switch_mode(event.button.id.split("_")[1])

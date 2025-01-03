@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "pyttml"
 version = "0.1.0"
-description = ""
+description = " Tool for creating syllable-synced lyrics for songs, within in your terminal! "
 authors = ["Aditya Gupta <mail@adityagupta.dev>"]
 readme = "README.md"
 
