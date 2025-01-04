@@ -96,27 +96,25 @@ class Carousel(Vertical):
 
         active_item_map_index = self.app.CURR_LYRICS.get_element_map_index(self.active_item.element)
 
-        if active_item_map_index == 0 and scroll_direction==_backward:
+        # Prevent cursor movement if at the first index or last index
+        if active_item_map_index == 0 and scroll_direction == _backward:
             return
-        
-        if active_item_map_index == len(self.app.CURR_LYRICS.element_map)-1 and scroll_direction==_forward:
+        if active_item_map_index == len(self.app.CURR_LYRICS.element_map) - 1 and scroll_direction == _forward:
             return
 
         self.shift_cursor(scroll_direction)
 
         active_item_map_index = self.app.CURR_LYRICS.get_element_map_index(self.active_item.element)
 
-        if active_item_map_index <= 1 and scroll_direction==_backward:
-            return
-        
-        if active_item_map_index >= len(self.app.CURR_LYRICS.element_map)-3 and scroll_direction == _backward:
-            return
+        # Prevent carousel movement towards the end
+        if scroll_direction == _backward:
+            if active_item_map_index <= 1 or active_item_map_index >= len(self.app.CURR_LYRICS.element_map) - 3:
+                return
 
-        elif active_item_map_index <= 2 and scroll_direction==_forward:
-            return
-        
-        if active_item_map_index >= len(self.app.CURR_LYRICS.element_map)-2 and scroll_direction==_forward:
-            return
+        # Prevent carousel movement up till the third item
+        elif scroll_direction == _forward:
+            if active_item_map_index <= 2 or active_item_map_index >= len(self.app.CURR_LYRICS.element_map) - 2:
+                return
         
         end_item:CarouselItem = self.query_one("#root")._nodes[0 if scroll_direction==_backward else -1]
 
