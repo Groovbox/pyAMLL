@@ -33,14 +33,12 @@ class SyncScreen(Screen):
         yield PlayerBox(id="player_box", player=self.app.PLAYER)
 
     def update_scroller(self) -> None:
-        carousel: Carousel = self.query_one(Carousel)
         vertical_scroller: VerticalScroller = self.query_one(VerticalScroller)
-        active_word_index = self.app.CURR_LYRICS.element_map[self.app.CURR_LYRICS.get_element_map_index(
-            carousel.active_item.element)][1]
+        carousel_item_line_index = self.query_one(Carousel).active_item.element.line_index
 
-        if vertical_scroller.active_line_index > active_word_index:
+        if vertical_scroller.active_line_index > carousel_item_line_index:
             vertical_scroller.scroll(ScrollDirection.backward)
-        elif vertical_scroller.active_line_index < active_word_index:
+        elif vertical_scroller.active_line_index < carousel_item_line_index:
             vertical_scroller.scroll(ScrollDirection.forward)
 
     def on_button_pressed(self, event: Button.Pressed):

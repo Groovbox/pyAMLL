@@ -2,13 +2,11 @@ from components.filepicker import FileNamePicker, FileType
 from player import PlayerState, MusicPlayer
 from utils import convert_seconds_to_format as fsec
 
-
 from textual import events
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import Button, Digits, Label, ProgressBar
-
 
 import time
 

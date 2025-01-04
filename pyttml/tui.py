@@ -15,7 +15,11 @@ class TTMLApp(App):
     PLAYER = MusicPlayer()
 
     BINDINGS = [
-        ("q", "quit", "Quit the app")]
+        ("q", "quit", "Quit the app"),
+        ("x", "switch_mode('settings')", "Go to Settings"),
+        ("e", "switch_mode('edit')", "Switch to Edit mode"),
+        ("r", "switch_mode('sync')", "Switch to Sync Mode")
+    ]
 
     SCREENS = {
         "edit": EditScreen,

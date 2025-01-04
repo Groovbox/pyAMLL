@@ -76,16 +76,7 @@ class Lyrics(list):
             if element == map_item[0]:
                 return i
         return 0
-            
 
-def dump_lyrics(line_objects) -> None:
-    with open("dump.txt", "w") as f:
-        for lines in line_objects:
-            for elements in lines.elements:
-                f.write(f"Text: {elements.text}\n")
-                f.write(f"Word Index: {elements.word_index}\n")
-                f.write(f"Line Index: {elements.line_index}\n")
-            f.write("\n\n")
 
 def process_lyrics(lyrics_str:str) -> Lyrics:
 
@@ -99,6 +90,7 @@ def process_lyrics(lyrics_str:str) -> Lyrics:
         text_line = text_lines[line_counter]
 
         if text_line.startswith("(") and text_line.endswith(")"):
+            text_line = text_line.strip("()")
             is_backing = True
         else:
             is_backing = False
@@ -117,6 +109,5 @@ def process_lyrics(lyrics_str:str) -> Lyrics:
             line.elements.append(VocalElement(word_index=word_counter, text=word, line_index=len(line_objects)))
 
         line_objects.append(line)
-    dump_lyrics(line_objects)
 
     return Lyrics(line_objects)
