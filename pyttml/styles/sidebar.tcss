@@ -1,0 +1,19 @@
+Sidebar {
+    dock: left;
+    width: auto;
+    margin: 0 1 0 0;
+}
+  
+Sidebar > Button {
+    background: #0d1117;
+    width: 100%;
+}
+  
+Sidebar > Button:disabled {
+    background: rgb(160, 160, 160);
+    color: #0d1117;
+}
+  
+Sidebar.-hidden {
+    display: none;
+}

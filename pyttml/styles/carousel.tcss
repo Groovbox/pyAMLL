@@ -1,0 +1,50 @@
+Carousel {
+    height: auto;
+}
+
+Carousel > #root {
+    height: auto;
+}
+
+#carousel_control {
+    height: auto;
+    margin-bottom: 1;
+}
+
+CarouselItem {
+    padding: 1;
+    width: auto;
+    height: auto;
+    min-width: 15;
+    background: $surface;
+    margin: 1;
+}
+
+CarouselItem > #root > Label {
+    text-align: center;
+}
+
+CarouselItem > #root > .element_text {
+    color: #ffffff;
+    text-style: none;
+    text-align: center;
+}
+
+CarouselItem > #root {
+    align-horizontal: center;
+}
+
+#carousel_control > Button {
+    max-width: 3;
+}
+
+.active {
+    background: rgb(255, 63, 121);
+    padding: 0 1;
+}
+
+.active > .element_text {
+    text-style: bold;
+    margin-top: 1;
+    margin-bottom: 1;
+}
