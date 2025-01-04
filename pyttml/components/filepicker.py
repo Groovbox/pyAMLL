@@ -80,15 +80,11 @@ def validate_input(value:str, type:FileType) -> ValidationResult:
 #     @staticmethod
 
 
-def process_input(location:str, _type:FileType) -> str:
-    if _type == FileType.AUDIO:
-        return location
-    elif _type == FileType.TEXT:
-        return open(location, "r").read()
-
-
 class FileNamePicker(ModalScreen[str]):
-    _type:FileType = FileType.TEXT
+    _type:FileType = None
+    def __init__(self, filetype:FileType):
+        self._type = filetype
+        super().__init__()
 
     def compose(self) -> ComposeResult:
         yield Grid(
@@ -105,7 +101,7 @@ class FileNamePicker(ModalScreen[str]):
             result:ValidationResult = validate_input(value, self._type)
             if result.result == ValidationResult.SUCCESS:
                 self.query_one(Input).remove_class("-invalid")
-                self.dismiss(process_input(location=value, _type=self._type))
+                self.dismiss(value)
             elif result.result == ValidationResult.FAILURE:
                 self.query_one(Input).add_class("-invalid")
                 self.app.notify(result.message, severity="error")

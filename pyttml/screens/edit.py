@@ -23,11 +23,11 @@ class EditScreen(Screen):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Event handler called when a button is pressed."""
         if event.button.name == "load":
-            def get_lyrics(content: str):
-                if content != "":
-                    self.query_one(".editor").text = content
+            def get_lyrics(location: str):
+                if location != "":
+                    self.query_one(".editor").text = open(location, 'r').read()
 
-            self.app.push_screen(FileNamePicker(), get_lyrics)
+            self.app.push_screen(FileNamePicker(FileType.TEXT), get_lyrics)
 
         elif event.button.name == "save":
             self.app.CURR_LYRICS = process_lyrics(self.query_one(".editor").text)

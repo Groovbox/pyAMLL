@@ -1,4 +1,4 @@
-from components.filepicker import FileNamePicker
+from components.filepicker import FileNamePicker, FileType
 from player import PlayerState, MusicPlayer
 from utils import convert_seconds_to_format as fsec
 
@@ -76,8 +76,7 @@ class PlayerBox(Horizontal):
 
         _h_element = self.query_one("#position_control", Horizontal)
         for i in range(10):
-            _h_element.mount(Button(str(i), id=f"seek_pos_{
-                             i}", classes="position-button"))
+            _h_element.mount(Button(str(i), id=f"seek_pos_{i}", classes="position-button"))
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         PLAYER = self.player
@@ -88,7 +87,7 @@ class PlayerBox(Horizontal):
                 self.query_one("#play_button").disabled = False
 
         if event.button.id == "open_file":
-            self.app.push_screen(FileNamePicker(), get_path)
+            self.app.push_screen(FileNamePicker(FileType.AUDIO), get_path)
 
         elif event.button.id == "play_button":
             if self.player.cstate == PlayerState.STOPPED:                
