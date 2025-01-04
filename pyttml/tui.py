@@ -15,17 +15,6 @@ class TTMLApp(App):
     PLAYER = MusicPlayer()
 
     BINDINGS = [
-        ("j", "move_down", "Move down"),
-        ("k", "move_up", "Move up"),
-        ("f", "move_right", "Move right"),
-        ("d", "move_left", "Move left"),
-        ("[", "decrease_speed", "Decrease speed"),
-        ("]", "increase_speed", "Increase speed"),
-        ("-", "seek_backward", "Seek backward"),
-        ("=", "seek_forward", "Seek forward"),
-        ("p", "pause", "Pause"),
-        ("c", "set_start_time", "Set start time"),
-        ("v", "set_end_time", "Set end time"),
         ("q", "quit", "Quit the app")]
 
     SCREENS = {

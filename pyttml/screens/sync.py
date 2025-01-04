@@ -49,38 +49,29 @@ class SyncScreen(Screen):
         if event.button.id == "next_word_button":
             carousel.move(ScrollDirection.forward)
             self.update_scroller()
-        if event.button.id == "prev_word_button":
+
+        elif event.button.id == "prev_word_button":
             carousel.move(ScrollDirection.backward)
             self.update_scroller()
-        elif event.button.id == "set_start_time":
-            active_word_index: int = self.app.CURR_LYRICS.get_element_map_index(
-                carousel.active_item.element)
-            self.app.CURR_LYRICS.element_map[active_word_index][0].start_time = round(
-                self.app.PLAYER.get_timestamp(), 3)
-            active_item_index = carousel.query_one(
-                "#root")._nodes.index(carousel.active_item)
+
+        elif event.button.id in ["set_start_time", "set_end_time", "set_end_move"]:
+            active_word_index = self.app.CURR_LYRICS.get_element_map_index(carousel.active_item.element)
+            timestamp = round(self.app.PLAYER.get_timestamp(), 3)
+            active_item_index = carousel.query_one("#root")._nodes.index(carousel.active_item)
+            
+            if event.button.id == "set_start_time":
+                self.app.CURR_LYRICS.element_map[active_word_index][0].start_time = timestamp
+            
+            elif event.button.id in ["set_end_time", "set_end_move"]:
+                self.app.CURR_LYRICS.element_map[active_word_index][0].end_time = timestamp
+                
+                if event.button.id == "set_end_move":
+                    carousel.move(ScrollDirection.forward)
+                    self.update_scroller()
+                    self.app.CURR_LYRICS.element_map[active_word_index + 1][0].start_time = timestamp + 0.02
+                    carousel.query_one("#root")._nodes[active_item_index + 1].update()
+
             carousel.query_one("#root")._nodes[active_item_index].update()
-        elif event.button.id == "set_end_time":
-            active_word_index: int = self.app.CURR_LYRICS.get_element_map_index(
-                carousel.active_item.element)
-            self.app.CURR_LYRICS.element_map[active_word_index][0].end_time = round(
-                self.app.PLAYER.get_timestamp(), 3)
-            active_item_index = carousel.query_one(
-                "#root")._nodes.index(carousel.active_item)
-            carousel.query_one("#root")._nodes[active_item_index].update()
-        elif event.button.id == "set_end_move":
-            active_word_index: int = self.app.CURR_LYRICS.get_element_map_index(
-                carousel.active_item.element)
-            self.app.CURR_LYRICS.element_map[active_word_index][0].end_time = round(
-                self.app.PLAYER.get_timestamp(), 3)
-            active_item_index = carousel.query_one(
-                "#root")._nodes.index(carousel.active_item)
-            carousel.query_one("#root")._nodes[active_item_index].update()
-            carousel.move(ScrollDirection.forward)
-            self.update_scroller()
-            self.app.CURR_LYRICS.element_map[active_word_index +
-                                    1][0].start_time = round(self.app.PLAYER.get_timestamp(), 3)+0.02
-            carousel.query_one("#root")._nodes[active_item_index+1].update()
 
     def on_screen_resume(self, event: events.ScreenResume):
         label: Static = self.query_one("#lyrics_label", Static)
