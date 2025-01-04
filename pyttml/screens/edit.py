@@ -2,7 +2,7 @@ from components.filepicker import FileNamePicker, FileType
 from components.sidebar import Sidebar
 from ttml import process_lyrics
 
-
+from textual import events
 from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.screen import Screen
@@ -39,3 +39,7 @@ class EditScreen(Screen):
 
         elif event.button.id == "reset":
             editor.text = ""
+    
+    def on_screen_suspend(self, event: events.ScreenSuspend):
+        # TODO: Add a setting allowing users to enable/disable saving on changing modes.
+        self.app.CURR_LYRICS = process_lyrics(self.query_one(".editor").text)

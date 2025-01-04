@@ -108,6 +108,7 @@ PlayerBox > Button, #seek_buttons > Button, #speed_controls > Button {
 
 .button_group {
   width: auto;
+  margin-right: 1;
 }
 
 .button_group > Button {
@@ -115,7 +116,7 @@ PlayerBox > Button, #seek_buttons > Button, #speed_controls > Button {
     max-width: 4;
 }
 
-#speed_reset {
+#speed_reset, #vol_reset {
   max-width:6 !important;
 }
 

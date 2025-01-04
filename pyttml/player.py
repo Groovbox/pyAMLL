@@ -108,4 +108,3 @@ class MusicPlayer:
             self.player.set_time(int(new_time_ms))  # Set the new playback position
             self.last_known_time = new_time_ms  # Update last known time
             self.last_real_time = time.time()  # Reset the real-time tracker
-
