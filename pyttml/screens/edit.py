@@ -1,4 +1,4 @@
-from components.filepicker import FileNamePicker
+from components.filepicker import FileNamePicker, FileType
 from components.sidebar import Sidebar
 from ttml import process_lyrics
 

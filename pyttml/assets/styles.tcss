@@ -1,3 +1,12 @@
+# TODO: Organize classes
+
+Input.-invalid {
+  border: tall $error 60%;
+}
+Input.-invalid:focus {
+  border: tall $error;
+}
+
 ProgressBar {
   margin-right: 1;
   margin-left: 1;
