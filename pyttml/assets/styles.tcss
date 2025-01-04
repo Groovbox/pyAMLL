@@ -165,3 +165,14 @@ CarouselItem > #root {
 .lyric-line-active {
   color: rgb(255, 63, 121)
 }
+
+.lyric-line-content {
+  width: 1fr;
+}
+
+.lyric-line-prop {
+  height:1;
+  border: none;
+  padding: 0;
+  max-width: 3;
+}

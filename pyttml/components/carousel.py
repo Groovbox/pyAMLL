@@ -1,7 +1,7 @@
 from textual.app import ComposeResult
-from textual.widgets import Label, ListItem, ListView
+from textual.widgets import Label, ListItem, ListView, Button
 from textual.containers import Horizontal, Vertical
-from ttml import VocalElement, Lyrics
+from ttml import VocalElement, Lyrics, Line, Vocal
 from enum import Enum
 from utils import convert_seconds_to_format as fsec
 
@@ -175,16 +175,14 @@ class Carousel(Vertical):
 
 
 class VerticalScroller(ListView):
-    lyrics:Lyrics = None
     active_line_index:int = 0
-
-    def __init__(self, *children, initial_index = 0, name = None, id = None, classes = None, disabled = False, lyrics:Lyrics=lyrics):
-        self.app.CURR_LYRICS = lyrics
-        super().__init__(*children, initial_index=initial_index, name=name, id=id, classes=classes, disabled=disabled)
 
     def on_mount(self) -> None:
         for line in self.app.CURR_LYRICS.init_list:
-            self.mount(ListItem(Label(str(line))))
+            self.mount(ListItem(Horizontal(
+                Label(str(line), classes="lyric-line-content"),
+                Label("", classes="lyric-line-prop")
+            )))
         
         self._nodes[self.active_line_index].add_class("lyric-line-active")
 
@@ -192,4 +190,12 @@ class VerticalScroller(ListView):
         self._nodes[self.active_line_index].remove_class("lyric-line-active")
         self.active_line_index = self.active_line_index+scroll_direction.value
         self._nodes[self.active_line_index].add_class("lyric-line-active")
-
+    
+    def update_props(self) -> None:
+        line_obj = self.app.CURR_LYRICS.init_list[self.active_line_index]
+        selected_line_widget:Horizontal = self._nodes[self.active_line_index].query_one(Horizontal) 
+        selected_line_widget.remove_children(".lyric-line-prop")
+        if line_obj.is_backing:
+            selected_line_widget.mount(Button("B", classes="lyric-line-prop", disabled=True))
+        if line_obj.vocal == Vocal.SECONDARY:
+            selected_line_widget.mount(Button("S", classes="lyric-line-prop", disabled=True))
