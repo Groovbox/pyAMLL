@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 def convert_seconds_to_format(seconds:float, show_milliseconds:bool=True) -> str:
     """
     Converts time to MM:ss:mm string
@@ -10,3 +13,6 @@ def convert_seconds_to_format(seconds:float, show_milliseconds:bool=True) -> str
     return f"{minutes:02}:{_seconds:02}"
 
 
+class FileType(Enum):
+    TEXT = "text"
+    AUDIO = "audio"
