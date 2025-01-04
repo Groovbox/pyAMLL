@@ -6,14 +6,16 @@ from enum import Enum
 from utils import convert_seconds_to_format as fsec
 
 
-class CarouselItem(Vertical):
-    def __init__(self, *children, name = None, id = None, classes = None, disabled = False,
-                 element:VocalElement=None, is_active=False):
-    
-        self.element = element
-        self.is_active = is_active
+class ScrollDirection(Enum):
+    forward = 1
+    backward = -1
 
-        super().__init__(*children, name=name, id=id, classes=classes, disabled=disabled)
+
+class CarouselItem(Vertical):
+    def __init__(self, element:VocalElement=None, active=False):
+        self.element = element
+        self.active = active
+        super().__init__()
 
     def compose(self) -> ComposeResult:
         yield Label(fsec(self.element.start_time), id="start_time")
@@ -23,41 +25,27 @@ class CarouselItem(Vertical):
     def update(self) -> None:
         self.query_one("#start_time", Label).update(fsec(self.element.start_time))
         self.query_one("#end_time", Label).update(fsec(self.element.end_time))
-
-
-    def toggle_timestamps(self, hide=None):
-        start_time_label = self.query_one("#start_time")
-        end_time_label = self.query_one("#end_time")
-
-        if hide is not None and isinstance(hide, bool):
-            start_time_label.visible = not(hide)
-            end_time_label.visible = not(hide)
-            return
-        
-        start_time_label.visible = not(start_time_label.visible)
-        start_time_label.visible = not(start_time_label.visible)
     
     def set_state(self, active):
+        start_time_label:Label = self.query_one("#start_time")
+        end_time_label:Label = self.query_one("#end_time")
+
         if active:
-            self.is_active = True
+            self.active = True
             self.classes = "active"
-            self.toggle_timestamps(False)
-            return
-        
-        self.is_active = False
-        self.classes = ""
-        self.toggle_timestamps(True)
+            start_time_label.visible = True
+            end_time_label.visible = True
+        else:        
+            self.active = False
+            self.classes = ""
+            start_time_label.visible = False
+            end_time_label.visible = False
     
     def on_mount(self):
-        self.set_state(self.is_active)
+        self.set_state(self.active)
     
     def __str__(self):
         return self.element.text
-
-
-class ScrollDirection(Enum):
-    forward = 1
-    backward = -1
 
 
 class Carousel(Vertical):
@@ -69,7 +57,6 @@ class Carousel(Vertical):
     def compose(self) -> ComposeResult:
         yield(Horizontal(id="root"))
 
-    
     def on_mount(self) -> None:
         self.substitue_last = CarouselItem(element=self.app.CURR_LYRICS.element_map[5][0])
         for i in range(5):
@@ -92,31 +79,31 @@ class Carousel(Vertical):
         Moves the carousel left or right by one item
         """
         _forward = ScrollDirection.forward
-        _backward = ScrollDirection.backward
-
-        active_item_map_index = self.app.CURR_LYRICS.get_element_map_index(self.active_item.element)
-
-        if active_item_map_index == 0 and scroll_direction==_backward:
-            return
+        _backward = ScrollDirection.backward\
         
-        if active_item_map_index == len(self.app.CURR_LYRICS.element_map)-1 and scroll_direction==_forward:
+        lyrics:Lyrics = self.app.CURR_LYRICS
+
+        active_item_map_index = lyrics.get_element_map_index(self.active_item.element)
+
+        # Prevent cursor movement if at the first index or last index
+        if active_item_map_index == 0 and scroll_direction == _backward:
+            return
+        if active_item_map_index == len(self.app.CURR_LYRICS.element_map) - 1 and scroll_direction == _forward:
             return
 
         self.shift_cursor(scroll_direction)
 
         active_item_map_index = self.app.CURR_LYRICS.get_element_map_index(self.active_item.element)
 
-        if active_item_map_index <= 1 and scroll_direction==_backward:
-            return
-        
-        if active_item_map_index >= len(self.app.CURR_LYRICS.element_map)-3 and scroll_direction == _backward:
-            return
+        # Prevent carousel movement towards the end
+        if scroll_direction == _backward:
+            if active_item_map_index <= 1 or active_item_map_index >= len(self.app.CURR_LYRICS.element_map) - 3:
+                return
 
-        elif active_item_map_index <= 2 and scroll_direction==_forward:
-            return
-        
-        if active_item_map_index >= len(self.app.CURR_LYRICS.element_map)-2 and scroll_direction==_forward:
-            return
+        # Prevent carousel movement up till the third item
+        elif scroll_direction == _forward:
+            if active_item_map_index <= 2 or active_item_map_index >= len(self.app.CURR_LYRICS.element_map) - 2:
+                return
         
         end_item:CarouselItem = self.query_one("#root")._nodes[0 if scroll_direction==_backward else -1]
 
@@ -140,7 +127,6 @@ class Carousel(Vertical):
             self.substitue_last = self.query_one("#root")._nodes[-1]
             self.query_one("#root").remove_children("CarouselItem:last-of-type")
 
-    
     def move_to_element_map_index(self, scroll_direction:ScrollDirection, element_map_index:int) -> None:
         new_fist_index = (element_map_index*scroll_direction.value)
 
@@ -163,7 +149,7 @@ class Carousel(Vertical):
         if isinstance(element_or_item,CarouselItem):
             _new_element = element_or_item
         else:
-            _new_element = CarouselItem(element=element_or_item, is_active=active)        
+            _new_element = CarouselItem(element=element_or_item, active=active)        
         root.mount(_new_element)
 
         if first:
@@ -192,4 +178,3 @@ class VerticalScroller(ListView):
         self._nodes[self.active_line_index].remove_class("lyric-line-active")
         self.active_line_index = self.active_line_index+scroll_direction.value
         self._nodes[self.active_line_index].add_class("lyric-line-active")
-

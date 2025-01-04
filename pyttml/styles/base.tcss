@@ -4,6 +4,7 @@ Horizontal {
 
 .button_group {
     width: auto;
+    margin-right: 1;
 }
 
 .button_group > Button {

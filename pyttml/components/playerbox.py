@@ -2,13 +2,11 @@ from components.filepicker import FileNamePicker, FileType
 from player import PlayerState, MusicPlayer
 from utils import convert_seconds_to_format as fsec
 
-
 from textual import events
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import Button, Digits, Label, ProgressBar
-
 
 import time
 
@@ -22,17 +20,17 @@ class PlayerBox(Horizontal):
         super().__init__(*children, name=name, id=id, classes=classes, disabled=disabled)
 
     def compose(self) -> ComposeResult:
-        yield Button("⏵", id="play_button", disabled=True)
+        yield Button("⏵", id="play", disabled=True)
         yield Horizontal(
-            Button("⏮", id="rewind_button"),
-            Button("⏭", id="forward_button"),
+            Button("⏮", id="rewind"),
+            Button("⏭", id="forward"),
             id="seek_buttons",
             classes="button_group"
         )
         yield Horizontal(
-            Button("⏪", id="decrease_speed_button"),
+            Button("⏪", id="speed_decrease"),
             Button("1.0", id="speed_reset"),
-            Button("⏩", id="increase_speed_button"),
+            Button("⏩", id="speed_increase"),
             id="speed_controls",
             classes="button_group"
         )
@@ -45,8 +43,9 @@ class PlayerBox(Horizontal):
         yield Label("00:00.00", id="total_time")
 
         yield Horizontal(
-            Button("🔉", id="vol_down_button", tooltip="Decrease Volume"),
-            Button("🔊", id="vol_up_button", tooltip="Increase Volume"),
+            Button("🔉", id="vol_down", tooltip="Decrease Volume"),
+            Button("100", id="vol_reset", tooltip="Reset Volume"),
+            Button("🔊", id="vol_up", tooltip="Increase Volume"),
             classes="button_group"
         )
         yield Button("📂", id="open_file", tooltip="Enter path of music file.")
@@ -61,8 +60,8 @@ class PlayerBox(Horizontal):
 
         try:
             if progress_bar.progress >= self.player.player.get_length()/1000:
-                self.query_one("#play_button").label = "⏵"
-                self.query_one("#play_button").variant = "warning"
+                self.query_one("#play").label = "⏵"
+                self.query_one("#play").variant = "warning"
         except TypeError:
             pass
         except AttributeError:
@@ -84,18 +83,18 @@ class PlayerBox(Horizontal):
             if path != "":
                 PLAYER.set_file(path)
                 time.sleep(0.3)
-                self.query_one("#play_button").disabled = False
+                self.query_one("#play").disabled = False
 
         if event.button.id == "open_file":
             self.app.push_screen(FileNamePicker(FileType.AUDIO), get_path)
 
-        elif event.button.id == "play_button":
+        elif event.button.id == "play":
             if self.player.cstate == PlayerState.STOPPED:                
                 self.player.play()
                 file_length = self.player.player.get_length() / 1000
                 self.query_one("#progress_bar").total = file_length
-                self.query_one("#play_button").label = "⏸"
-                self.query_one("#play_button").variant = "success"
+                self.query_one("#play").label = "⏸"
+                self.query_one("#play").variant = "success"
                 t_time_label = self.query_one("#total_time", Label)
                 t_time_label.update(content=fsec(
                     file_length, show_milliseconds=False))
@@ -103,41 +102,47 @@ class PlayerBox(Horizontal):
 
             elif self.player.cstate == PlayerState.PAUSED:
                 self.player.resume()
-                self.query_one("#play_button").label = "⏸"
-                self.query_one("#play_button").variant = "success"
+                self.query_one("#play").label = "⏸"
+                self.query_one("#play").variant = "success"
                 return
 
             elif self.player.cstate == PlayerState.PLAYING:
                 self.player.pause()
-                self.query_one("#play_button").label = "⏵"
-                self.query_one("#play_button").variant = "warning"
+                self.query_one("#play").label = "⏵"
+                self.query_one("#play").variant = "warning"
                 return
 
-        elif event.button.id == "rewind_button":
+        elif event.button.id == "rewind":
             self.player.seek(-5)
-
-        elif event.button.id == "forward_button":
+        elif event.button.id == "forward":
             self.player.seek(5)
 
-        elif event.button.id == "decrease_speed_button":
-            self.player.set_speed(self.player.playback_speed-0.25)
-            speed_reset_button: Button = self.query_one("#speed_reset")
-            speed_reset_button.label = str(self.player.playback_speed)
+        # Speed Controls
+        elif event.button.id.startswith("speed_"):
+            speed_label: Button = self.query_one("#speed_reset")
 
-        elif event.button.id == "increase_speed_button":
-            self.player.set_speed(self.player.playback_speed+0.25)
-            speed_reset_button: Button = self.query_one("#speed_reset")
-            speed_reset_button.label = str(self.player.playback_speed)
+            if event.button.id == "speed_decrease":
+                self.player.set_speed(self.player.playback_speed-0.25)
+            elif event.button.id == "speed_increase":
+                self.player.set_speed(self.player.playback_speed+0.25)
+            else:
+                self.player.set_speed(1.0)
+            speed_label.label = str(self.player.playback_speed)
+        
+        # Volume Controls
+        elif event.button.id.startswith("vol_"):
+            vol_label: Button = self.query_one("#vol_reset")
 
-        elif event.button.id == "speed_reset":
-            self.player.set_speed(1.0)
-            speed_reset_button: Button = self.query_one("#speed_reset")
-            speed_reset_button.label = str(self.player.playback_speed)
-
-        elif event.button.id == "vol_down_button":
-            self.player.change_volume(-10)
-        elif event.button.id == "vol_up_button":
-            self.player.change_volume(10)
+            if event.button.id == "vol_down":
+                self.player.change_volume(-10)
+            elif event.button.id == "vol_up":
+                self.player.change_volume(10)
+                vol_label.label = str(self.player.volume)
+            else:
+                # TODO: Define default volume
+                self.player.volume = 75
+                self.player.player.audio_set_volume(75)
+            vol_label.label = str(self.player.volume)
 
         elif "seek_pos_" in event.button.id:
             partition = int(event.button.id.split("_")[-1])

@@ -1,6 +1,5 @@
 from ttml import *
 import vlc
-from vlc import State
 import time
 from enum import Enum
 
@@ -80,8 +79,6 @@ class MusicPlayer:
             self.last_known_time += elapsed_real_time * 1000 * self.playback_speed
             self.last_real_time = time.time()
         
-        
-
     def get_timestamp(self):
         """Get the accurate current playback time in seconds."""
         self.update_time()
@@ -111,4 +108,3 @@ class MusicPlayer:
             self.player.set_time(int(new_time_ms))  # Set the new playback position
             self.last_known_time = new_time_ms  # Update last known time
             self.last_real_time = time.time()  # Reset the real-time tracker
-

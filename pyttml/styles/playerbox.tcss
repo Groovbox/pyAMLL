@@ -47,6 +47,6 @@ PlayerBox > Button,
   max-width: 4;
 }
 
-#speed_reset {
+#speed_reset, #vol_reset {
   max-width: 6 !important;
 }

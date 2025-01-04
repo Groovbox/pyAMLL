@@ -55,31 +55,6 @@ def validate_input(value:str, type:FileType) -> ValidationResult:
     return result
 
 
-# class FileNameValidator(Validator):
-#     """
-#     Validates given file path
-#     """
-#     def validate(self, value: str, type:str) -> ValidationResult:
-
-#         if not os.path.exists(value):
-#             return self.failure("File does not exist")
-        
-#         if type == "txt":
-#             try:
-#                 with open(value) as f:
-#                     f.read()
-#             except UnicodeDecodeError:
-#                 return self.failure("Given file is not a text file")
-            
-#         if type == "audio":
-#             if not self.is_music_file(value):
-#                 return self.failure("Given file is not an audio file")
-
-#         return self.success()
-
-#     @staticmethod
-
-
 class FileNamePicker(ModalScreen[str]):
     _type:FileType = None
     def __init__(self, filetype:FileType):
