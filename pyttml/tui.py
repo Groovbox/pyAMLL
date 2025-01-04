@@ -10,7 +10,15 @@ from ttml import Lyrics
 
 class TTMLApp(App):
     """A Textual app to create ttml files."""
-    CSS_PATH = "assets/styles.tcss"
+
+    CSS_PATH = [
+        "styles/base.tcss",
+        "styles/filenamepicker.tcss",
+        "styles/sidebar.tcss",
+        "styles/carousel.tcss",
+        "styles/playerbox.tcss",
+    ]
+
     CURR_LYRICS: Lyrics = None
     PLAYER = MusicPlayer()
 

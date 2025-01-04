@@ -1,0 +1,52 @@
+PlayerBox {
+  padding: 0 1;
+  height: 5;
+  border: thick $background 80%;
+  background: $surface;
+  dock: bottom;
+  align-vertical: middle;
+}
+
+ProgressBar {
+  margin-right: 1;
+  margin-left: 1;
+}
+
+ProgressBar > Vertical {
+  margin-top: 1;
+}
+
+ProgressBar > Bar {
+  width: 1fr;
+}
+
+#position_control > Button {
+  max-width: 10%;
+  border: none;
+}
+
+Digits {
+  width: auto;
+}
+
+#seek_buttons,
+#speed_controls {
+  width: auto;
+  margin-right: 1;
+}
+
+#total_time {
+  margin-right: 1;
+  margin-left: 1;
+  margin-top: 1;
+}
+
+PlayerBox > Button,
+#seek_buttons > Button,
+#speed_controls > Button {
+  max-width: 4;
+}
+
+#speed_reset, #vol_reset {
+  max-width: 6 !important;
+}
