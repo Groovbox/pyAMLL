@@ -48,17 +48,10 @@ class CarouselItem(Vertical):
         return self.element.text
 
 
-class Carousel(Vertical):
+class Carousel(Horizontal):
     active_item:CarouselItem = None
 
-    substitue_last:CarouselItem = None
-    substitue_first:CarouselItem = None
-
-    def compose(self) -> ComposeResult:
-        yield(Horizontal(id="root"))
-
     def on_mount(self) -> None:
-        self.substitue_last = CarouselItem(element=self.app.CURR_LYRICS.element_map[5][0])
         for i in range(5):
             self.push(self.app.CURR_LYRICS.element_map[i][0], active=(i==0))
 
@@ -67,10 +60,14 @@ class Carousel(Vertical):
         Sets the next or the previous CarouselItem as active and current Item as Inactive
         """
 
-        active_item_index = self.query_one("#root")._nodes.index(self.active_item)
+        active_item_index = self._nodes.index(self.active_item)
+        new_index = active_item_index+scroll_direction.value
+
+        if new_index not in range(0, len(self._nodes)):
+            return
         self.active_item.set_state(False)
 
-        new_active_item:CarouselItem = self.query_one("#root")._nodes[active_item_index+scroll_direction.value]
+        new_active_item:CarouselItem = self._nodes[new_index]
         new_active_item.set_state(True)
         self.active_item = new_active_item
     
@@ -78,59 +75,38 @@ class Carousel(Vertical):
         """
         Moves the carousel left or right by one item
         """
-        _forward = ScrollDirection.forward
-        _backward = ScrollDirection.backward\
-        
         lyrics:Lyrics = self.app.CURR_LYRICS
-
-        active_item_map_index = lyrics.get_element_map_index(self.active_item.element)
-
-        # Prevent cursor movement if at the first index or last index
-        if active_item_map_index == 0 and scroll_direction == _backward:
-            return
-        if active_item_map_index == len(self.app.CURR_LYRICS.element_map) - 1 and scroll_direction == _forward:
-            return
 
         self.shift_cursor(scroll_direction)
 
-        active_item_map_index = self.app.CURR_LYRICS.get_element_map_index(self.active_item.element)
+        active_item_map_index = lyrics.get_element_map_index(self.active_item.element)
+        last_item_map_index = lyrics.get_element_map_index(self._nodes[-1].element)
+        first_item_map_index = lyrics.get_element_map_index(self._nodes[0].element)
 
-        # Prevent carousel movement towards the end
-        if scroll_direction == _backward:
-            if active_item_map_index <= 1 or active_item_map_index >= len(self.app.CURR_LYRICS.element_map) - 3:
+        # Prevent carousel movement
+        if scroll_direction == ScrollDirection.forward:
+            if last_item_map_index >= len(lyrics.element_map)-1:
                 return
-
-        # Prevent carousel movement up till the third item
-        elif scroll_direction == _forward:
-            if active_item_map_index <= 2 or active_item_map_index >= len(self.app.CURR_LYRICS.element_map) - 2:
+            if active_item_map_index in range(0,3):
                 return
-        
-        end_item:CarouselItem = self.query_one("#root")._nodes[0 if scroll_direction==_backward else -1]
+            
+            self.remove_children("CarouselItem:first-of-type")
+            self.push(lyrics.element_map[last_item_map_index+1][0])
 
-        if scroll_direction==_forward and self.app.CURR_LYRICS.element_map[-1][0] == self.substitue_last.element:
-            self.push(self.substitue_last)
-            self.substitue_last = None
-            self.substitue_first = self.query_one("#root")._nodes[0]
-            self.query_one("#root").remove_children("CarouselItem:first-of-type")
-            return
-    
-        sub_element = self.app.CURR_LYRICS.get_offset_element(end_item.element, scroll_direction.value*2)
-
-        if scroll_direction == _forward:        
-            self.push(self.substitue_last)
-            self.substitue_last = CarouselItem(element=sub_element)
-            self.substitue_first = self.query_one("#root")._nodes[0]
-            self.query_one("#root").remove_children("CarouselItem:first-of-type")
-        else:            
-            self.push(self.substitue_first, first=True)
-            self.substitue_first = CarouselItem(element=sub_element)
-            self.substitue_last = self.query_one("#root")._nodes[-1]
-            self.query_one("#root").remove_children("CarouselItem:last-of-type")
+        elif scroll_direction == ScrollDirection.backward:
+            total_elements = len(lyrics.element_map)
+            if first_item_map_index == 0:
+                return
+            if active_item_map_index in range(total_elements-3,total_elements-1):
+                return
+            
+            self.remove_children("CarouselItem:last-of-type")
+            self.push(lyrics.element_map[first_item_map_index-1][0], first=True)
 
     def move_to_element_map_index(self, scroll_direction:ScrollDirection, element_map_index:int) -> None:
         new_fist_index = (element_map_index*scroll_direction.value)
 
-        self.query_one("#root").remove_children()
+        self.remove_children()
         
         for i in range(5):
             _active = False
@@ -138,35 +114,32 @@ class Carousel(Vertical):
                 _active = True
             self.push(self.app.CURR_LYRICS.element_map[new_fist_index+i][0], active=_active)
         
-        self.substitue_first = self.app.CURR_LYRICS.element_map[new_fist_index-1][0]
-        self.substitue_last = self.app.CURR_LYRICS.element_map[new_fist_index+5][0]
         self.active_item = self.app.CURR_LYRICS.element_map[new_fist_index+2]
         
-    def push(self, element_or_item:VocalElement|CarouselItem, active:bool=False, first=False) -> None:
+    def push(self, vocal_element:VocalElement, active:bool=False, first=False) -> None:
+        """
+        Adds a new CarouselItem to the carousel.
+        Args:
+            vocal_element (VocalElement): The vocal element to be added to the carousel.
+            active (bool, optional): If True, sets the new item as the active item. Defaults to False.
+            first (bool, optional): If True, inserts the new item at the beginning of the carousel. Defaults to False.
+        Returns:
+            None
+        """
 
-        root = self.query_one("#root")
-
-        if isinstance(element_or_item,CarouselItem):
-            _new_element = element_or_item
-        else:
-            _new_element = CarouselItem(element=element_or_item, active=active)        
-        root.mount(_new_element)
+        new_item = CarouselItem(element=vocal_element, active=active)        
+        self.mount(new_item)
 
         if first:
-            _old_first = root._nodes[0]
-            root.move_child(_new_element, before=_old_first)
+            _old_first = self._nodes[0]
+            self.move_child(new_item, before=_old_first)
         
         if active:
-            self.active_item = _new_element
+            self.active_item = new_item
 
 
 class VerticalScroller(ListView):
-    lyrics:Lyrics = None
     active_line_index:int = 0
-
-    def __init__(self, *children, initial_index = 0, name = None, id = None, classes = None, disabled = False, lyrics:Lyrics=lyrics):
-        self.app.CURR_LYRICS = lyrics
-        super().__init__(*children, initial_index=initial_index, name=name, id=id, classes=classes, disabled=disabled)
 
     def on_mount(self) -> None:
         for line in self.app.CURR_LYRICS.init_list:

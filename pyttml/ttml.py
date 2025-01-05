@@ -79,6 +79,8 @@ class Lyrics(list):
 
 
 def process_lyrics(lyrics_str:str) -> Lyrics:
+    if lyrics_str == "":
+        return
 
     text_lines:list[str] = lyrics_str.split("\n")
     line_objects:list[Line] = []
@@ -109,5 +111,4 @@ def process_lyrics(lyrics_str:str) -> Lyrics:
             line.elements.append(VocalElement(word_index=word_counter, text=word, line_index=len(line_objects)))
 
         line_objects.append(line)
-
     return Lyrics(line_objects)

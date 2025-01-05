@@ -2,7 +2,7 @@ Carousel {
     height: auto;
 }
 
-Carousel > #root {
+Carousel {
     height: auto;
 }
 
@@ -20,17 +20,17 @@ CarouselItem {
     margin: 1;
 }
 
-CarouselItem > #root > Label {
+CarouselItem > Label {
     text-align: center;
 }
 
-CarouselItem > #root > .element_text {
+CarouselItem > .element_text {
     color: #ffffff;
     text-style: none;
     text-align: center;
 }
 
-CarouselItem > #root {
+CarouselItem {
     align-horizontal: center;
 }
 

@@ -1,7 +1,8 @@
 from components.carousel import Carousel, ScrollDirection, VerticalScroller
 from components.playerbox import PlayerBox
 from components.sidebar import Sidebar
-from ttml import Lyrics
+from ttml import Lyrics, process_lyrics
+from screens.edit import EditScreen
 
 
 from textual import events
@@ -18,7 +19,6 @@ class SyncScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Static("No Lyrics Loaded", id="lyrics_label")
         yield Sidebar(id="sidebar")
-        yield Carousel(id="word-carousel")
         yield (Horizontal(
             Button("←", id="prev_word_button"),
             Button("→", id="next_word_button"),
@@ -55,7 +55,7 @@ class SyncScreen(Screen):
         elif event.button.id in ["set_start_time", "set_end_time", "set_end_move"]:
             active_word_index = self.app.CURR_LYRICS.get_element_map_index(carousel.active_item.element)
             timestamp = round(self.app.PLAYER.get_timestamp(), 3)
-            active_item_index = carousel.query_one("#root")._nodes.index(carousel.active_item)
+            active_item_index = carousel._nodes.index(carousel.active_item)
             
             if event.button.id == "set_start_time":
                 self.app.CURR_LYRICS.element_map[active_word_index][0].start_time = timestamp
@@ -67,9 +67,9 @@ class SyncScreen(Screen):
                     carousel.move(ScrollDirection.forward)
                     self.update_scroller()
                     self.app.CURR_LYRICS.element_map[active_word_index + 1][0].start_time = timestamp + 0.02
-                    carousel.query_one("#root")._nodes[active_item_index + 1].update()
+                    carousel._nodes[active_item_index + 1].update()
 
-            carousel.query_one("#root")._nodes[active_item_index].update()
+            carousel._nodes[active_item_index].update()
 
     def on_screen_resume(self, event: events.ScreenResume):
         label: Static = self.query_one("#lyrics_label", Static)
@@ -77,15 +77,14 @@ class SyncScreen(Screen):
         if self.app.CURR_LYRICS == self.lyrics_saved_state:
             return
 
-        if self.app.CURR_LYRICS.element_map == []:
-            self.lyrics_saved_state = self.app.CURR_LYRICS
-            self.query_one("#word-carousel").visible = False
+        if self.app.CURR_LYRICS is None:
             label.display = True
             return
 
         self.lyrics_saved_state = self.app.CURR_LYRICS
-        self.query_one("#word-carousel").visible = True
         self.remove_children(ListItem)
         label.display = False
+        self.mount(Carousel(id="word-carousel"))
+        self.mount(VerticalScroller())
 
-        self.mount(VerticalScroller(lyrics=self.app.CURR_LYRICS))
+        self.move_child(self.query_one("#carousel_control"), after=self.query_one(Carousel))

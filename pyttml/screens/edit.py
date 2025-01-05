@@ -15,7 +15,6 @@ class EditScreen(Screen):
 
         yield Horizontal(
             Button("Load from File", id="load"),
-            Button("Save", id="save"),
             Button("Reset", id="reset", variant="error")
         )
 
@@ -33,13 +32,8 @@ class EditScreen(Screen):
 
             self.app.push_screen(FileNamePicker(FileType.TEXT), get_lyrics)
 
-        elif event.button.id == "save":
-            self.app.CURR_LYRICS = process_lyrics(editor.text)
-            self.app.notify("Saved Lyrics")
-
         elif event.button.id == "reset":
             editor.text = ""
-    
-    def on_screen_suspend(self, event: events.ScreenSuspend):
-        # TODO: Add a setting allowing users to enable/disable saving on changing modes.
-        self.app.CURR_LYRICS = process_lyrics(self.query_one(".editor").text)
+
+        elif event.button.id == "nav_sync_button":
+            self.app.CURR_LYRICS = process_lyrics(editor.text)
