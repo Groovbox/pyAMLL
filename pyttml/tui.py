@@ -43,7 +43,7 @@ class TTMLApp(App):
 
     def on_mount(self) -> None:
         self.switch_mode("edit")
-
+    
 
 if __name__ == "__main__":
     app = TTMLApp()
