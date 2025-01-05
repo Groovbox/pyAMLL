@@ -6,14 +6,11 @@ authors = ["Aditya Gupta <mail@adityagupta.dev>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.10"
 rich = "^13.9.4"
-pynput = "^1.7.7"
 python-vlc = "^3.0.21203"
 textual = "^1.0.0"
 textual-dev = "^1.7.0"
-pyaudio = "^0.2.14"
-numpy = "^2.2.1"
 mutagen = "^1.47.0"
 
 
