@@ -35,11 +35,11 @@ class Line:
 
     @property
     def start_time(self) -> float:
-        return self.elements[0].get_start_time()
+        return self.elements[0].start_time
 
     @property
     def end_time(self) -> float:
-        return self.elements[-1].get_end_time()
+        return self.elements[-1].end_time
 
     def is_last_element(self, element:VocalElement|int) -> bool:
         if isinstance(element, int):
@@ -129,14 +129,6 @@ def parse_lyrics_to_swlrc(lyrics:Lyrics) -> dict:
     
     return swl
 
-def dump_lyrics(line_objects) -> None:
-    with open("dump.txt", "w") as f:
-        for lines in line_objects:
-            for elements in lines.elements:
-                f.write(f"Text: {elements.text}\n")
-                f.write(f"Word Index: {elements.word_index}\n")
-                f.write(f"Line Index: {elements.line_index}\n")
-            f.write("\n\n")
 
 def process_lyrics(lyrics_str:str) -> Lyrics:
 
@@ -168,6 +160,5 @@ def process_lyrics(lyrics_str:str) -> Lyrics:
             line.elements.append(VocalElement(word_index=word_counter, text=word, line_index=len(line_objects)))
 
         line_objects.append(line)
-    dump_lyrics(line_objects)
 
     return Lyrics(line_objects)
