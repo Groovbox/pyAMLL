@@ -10,7 +10,6 @@ class ScrollDirection(Enum):
     forward = 1
     backward = -1
 
-
 class CarouselItem(Vertical):
     def __init__(self, element:VocalElement=None, active=False):
         self.element = element
@@ -52,8 +51,12 @@ class Carousel(Horizontal):
     active_item:CarouselItem = None
 
     def on_mount(self) -> None:
+        # TODO: Set variable number of elements displayed in the carousel.
         for i in range(5):
-            self.push(self.app.CURR_LYRICS.element_map[i][0], active=(i==0))
+            try:
+                self.push(self.app.CURR_LYRICS.element_map[i][0], active=(i==0))
+            except IndexError:
+                break
 
     def shift_cursor(self,scroll_direction:ScrollDirection) -> None:
         """
