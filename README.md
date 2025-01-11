@@ -1,6 +1,6 @@
-# PyTTML
+# pyAMLL
 
-Pyttml is a tool that can be used to manually sync up lyrics of a song to its timestamps (down to the syllable). 
+pyAMLL is a tool that can be used to manually sync up lyrics of a song to its timestamps (down to the syllable). 
 
 The main source of inspiration comes from Apple Music with their syllable-synced lyrics. The end goal is to make a tool that generates file that are compliant with another tool by @Steve-Xmh - [amll-ttml-tool](https://github.com/Steve-xmh/amll-ttml-tool).
 
@@ -11,27 +11,27 @@ This works with a TUI with the help of [Textual](https://github.com/Textualize/t
 ## Installation
 
 ```sh
-git clone https://github.com/sortedcord/pyttml.git
+git clone https://github.com/sortedcord/pyAMLL.git
 ```
 
-PyTTML makes use of [poetry](https://python-poetry.org/docs/#installing-with-the-official-installer) as package manager. After installing poetry on your system, just install the tool:
+pyAMLL makes use of [poetry](https://python-poetry.org/docs/#installing-with-the-official-installer) as package manager. After installing poetry on your system, just install the tool:
 
 ```sh
-cd pyttml
+cd pyAMLL
 poetry install
 ```
 
 And then run the `tui.py` file
 
 ```sh
-poetry run python pyttml/tui.py
+poetry run python pyAMLL/tui.py
 ```
 
 ## Usage
 
 ### Editing Lyrics
 
-PyTTML consists of an `Edit` tab where you can add your lyrics either by using the in-built editor or adding them from a text file.
+pyAMLL consists of an `Edit` tab where you can add your lyrics either by using the in-built editor or adding them from a text file.
 
 ![Edit Lyrics](docs/assets/img/edit_lyrics.png)
 
