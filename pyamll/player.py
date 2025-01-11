@@ -1,4 +1,4 @@
-from ttml import *
+from parser import *
 import vlc
 import time
 from enum import Enum

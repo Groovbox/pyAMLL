@@ -1,6 +1,6 @@
 from components.filepicker import FileNamePicker, FileType
 from components.sidebar import Sidebar
-from ttml import process_lyrics
+from parser import process_lyrics
 
 from textual import events
 from textual.app import ComposeResult

@@ -1,7 +1,7 @@
 from components.carousel import Carousel, ScrollDirection, VerticalScroller
 from components.playerbox import PlayerBox
 from components.sidebar import Sidebar
-from ttml import Lyrics, process_lyrics
+from parser import Lyrics, process_lyrics
 from screens.edit import EditScreen
 
 

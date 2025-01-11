@@ -5,7 +5,7 @@ from screens.settings import SettingsScreen
 from screens.sync import SyncScreen
 
 from player import MusicPlayer
-from ttml import Lyrics
+from parser import Lyrics
 
 
 class TTMLApp(App):

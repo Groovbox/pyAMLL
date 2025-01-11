@@ -1,7 +1,7 @@
 from textual.app import ComposeResult
 from textual.widgets import Label, ListItem, ListView
 from textual.containers import Horizontal, Vertical
-from ttml import VocalElement, Lyrics
+from parser import VocalElement, Lyrics
 from enum import Enum
 from utils import convert_seconds_to_format as fsec
 

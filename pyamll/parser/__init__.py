@@ -58,6 +58,7 @@ class Line:
 class Lyrics(list):
     element_map = []
     init_list:list[Line]
+    
     def __init__(self, init_list:list[Line], *args):
         self.init_list = init_list
         for i,line in enumerate(init_list):
