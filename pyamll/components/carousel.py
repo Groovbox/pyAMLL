@@ -2,6 +2,7 @@ from textual.app import ComposeResult
 from textual.widgets import Label, ListItem, ListView
 from textual.containers import Horizontal, Vertical
 from parser import VocalElement, Lyrics
+from parser.modify import ModificationType
 from enum import Enum
 from utils import convert_seconds_to_format as fsec
 
@@ -139,6 +140,18 @@ class Carousel(Horizontal):
         
         if active:
             self.active_item = new_item
+    
+    def rebuild(self) -> None:
+        operation = self.app.CURR_LYRICS.modification_stack[-1]
+        if operation._type == ModificationType.DELETE:
+            self.remove_children(".active") # Remove the current active element
+            # If first element then go to next element
+            if self.active_item.element.line_index == 0 and self.active_item.element.word_index == 0:
+                self.move(ScrollDirection.forward)
+            else:
+                self.move(ScrollDirection.backward)
+            # Else go back
+            
 
 
 class VerticalScroller(ListView):

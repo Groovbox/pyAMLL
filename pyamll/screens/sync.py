@@ -1,9 +1,9 @@
 from components.carousel import Carousel, ScrollDirection, VerticalScroller
 from components.playerbox import PlayerBox
 from components.sidebar import Sidebar
-from parser import Lyrics, process_lyrics
-from screens.edit import EditScreen
-
+from components.elementedit import ElementEditModal
+from parser import Lyrics
+from parser.modify import LyricModifyOperation, OperationStatus
 
 from textual import events
 from textual.app import ComposeResult
@@ -28,6 +28,7 @@ class SyncScreen(Screen):
                    tooltip="Set timestamp as the end of current word and start time of the next word"),
             Button("H", id="set_end_time",
                    tooltip="Set Timestamp as the endtime of the current word and stay there"),
+            Button("✎", id="edit_vocal_element", tooltip="Edit VocalElement"),
             id="carousel_control"
         ))
         yield PlayerBox(id="player_box", player=self.app.PLAYER)
@@ -70,6 +71,18 @@ class SyncScreen(Screen):
                     carousel._nodes[active_item_index + 1].update()
 
             carousel._nodes[active_item_index].update()
+        
+        elif event.button.id == "edit_vocal_element":
+            def _set_element(modifier:LyricModifyOperation) -> None:
+                modifier.lyrics = self.app.CURR_LYRICS
+                self.app.CURR_LYRICS = modifier.execute()
+                self.app.CURR_LYRICS.modification_stack.append(modifier)
+                if modifier.status == OperationStatus.EXEUTED:
+                    # Refresh carousel and vertical scroller
+                    self.app.notify("deleted element.")
+                    carousel.rebuild()
+            
+            self.app.push_screen(ElementEditModal(carousel.active_item.element), _set_element)
 
     def on_screen_resume(self, event: events.ScreenResume):
         label: Static = self.query_one("#lyrics_label", Static)

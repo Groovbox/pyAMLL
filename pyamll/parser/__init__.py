@@ -58,25 +58,57 @@ class Line:
 class Lyrics(list):
     element_map = []
     init_list:list[Line]
+    modification_stack = []
     
     def __init__(self, init_list:list[Line], *args):
         self.init_list = init_list
-        for i,line in enumerate(init_list):
+        self.generate_element_map()
+        
+        super().__init__(*args)
+    
+    def generate_element_map(self) -> None:
+        for i,line in enumerate(self.init_list):
             line:Line = line
             for j, element in enumerate(line.elements):
                 self.element_map.append([element, i, j])
-        super().__init__(*args)
-    
-    def get_offset_element(self, element:VocalElement, offset:int) -> VocalElement:
-        for i,map_item in enumerate(self.element_map):
-            if element == map_item[0]:
-                return self.element_map[i+offset][0]
-    
+
     def get_element_map_index(self, element:VocalElement) -> int:
         for i,map_item in enumerate(self.element_map):
             if element == map_item[0]:
                 return i
         return 0
+    
+    def rebuild(self) -> None:
+        # Check if any empty lines
+        del_line_list = []
+        del_word_list = []
+
+        for i, line in enumerate(self.init_list):
+            for j, word in enumerate(line.elements):
+                if word is None:
+                    del_word_list.append((i,j))
+
+                    # Update word_index for words after it
+                    for word in line.elements[j+1:]:
+                        word.word_index -=1
+        
+        for i,j in del_word_list:
+            del self.init_list[i].elements[j]
+
+        for i,line in enumerate(self.init_list):
+            # check if any empty words
+            if not line.elements:
+                del_line_list.append(i)
+
+                # Update line_index of all the elements after it
+                for _line in self.init_list[i+1:]:
+                    for _elements in _line.elements:
+                        _elements.line_index -=1
+        
+        for i in del_line_list:
+            del self.init_list[i]
+        
+        self.generate_element_map()
 
 
 def process_lyrics(lyrics_str:str) -> Lyrics:
