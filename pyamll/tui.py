@@ -17,6 +17,7 @@ class TTMLApp(App):
         "styles/sidebar.tcss",
         "styles/carousel.tcss",
         "styles/playerbox.tcss",
+        "styles/elementedit.tcss",
     ]
 
     CURR_LYRICS: Lyrics = None
