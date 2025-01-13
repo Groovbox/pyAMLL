@@ -102,6 +102,8 @@ def process_lyrics(lyrics_str:str) -> Lyrics:
 
         for word_counter in range(len(text_line.split(" "))):
             word = text_line.split(" ")[word_counter]
+            if word.strip() == "":
+                continue
 
             if '/' in word:
                 syllables = word.split('/')
