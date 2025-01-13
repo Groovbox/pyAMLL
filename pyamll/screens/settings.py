@@ -1,6 +1,5 @@
 from components.sidebar import Sidebar
 
-
 from textual.app import ComposeResult
 from textual.screen import Screen
 

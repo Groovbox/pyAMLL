@@ -11,8 +11,3 @@ Horizontal {
     background: #0d1117;
     max-width: 4;
 }
-
-.lyric-line-active {
-    color: rgb(255, 63, 121);
-}
-

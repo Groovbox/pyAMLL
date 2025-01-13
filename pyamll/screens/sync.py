@@ -1,7 +1,7 @@
 from components.carousel import Carousel, ScrollDirection, VerticalScroller
 from components.playerbox import PlayerBox
 from components.sidebar import Sidebar
-from parser import Lyrics
+from parser import Lyrics, Vocal
 
 from textual import events
 from textual.app import ComposeResult
@@ -29,7 +29,11 @@ class SyncScreen(Screen):
             "prev_word": self.action_move_carousel_backward,
             "set_start_time": self.action_set_start_time,
             "set_end_time": self.action_set_end_time,
-            "set_end_move": self.action_set_end_move
+            "set_end_move": self.action_set_end_move,
+            "toggle_line_backing": self.action_toggle_line_backing,
+            "set_vocal_primary": self.action_set_vocal_primary,
+            "set_vocal_std": self.action_set_vocal_standard,
+            "set_vocal_secondary": self.action_set_vocal_secondary
         }
         super().__init__()
 
@@ -45,6 +49,10 @@ class SyncScreen(Screen):
                    tooltip="Set timestamp as the end of current word and start time of the next word"),
             Button("H", id="set_end_time",
                    tooltip="Set Timestamp as the endtime of the current word and stay there"),
+            Button("B", id="toggle_line_backing", tooltip="Toggle line as background vocals"),
+            Button("P", id="set_vocal_primary", tooltip="Set Current line vocals to Primary"),
+            Button("R", id="set_vocal_std", tooltip="Set current line vocals to standard (for lines that are sung by both the singers)"),
+            Button("S", id="set_vocal_secondary", tooltip="Set current line vocals to secondary (for lines sung by featured artists)"),
             id="carousel_control"
         ))
         yield PlayerBox(id="player_box", player=self.app.PLAYER)
@@ -90,6 +98,27 @@ class SyncScreen(Screen):
         carousel.move(ScrollDirection.forward)
         self.update_scroller()
         self.action_set_start_time()
+    
+    def action_toggle_line_backing(self):
+        vertical_scroller: VerticalScroller = self.query_one(VerticalScroller)
+        self.app.CURR_LYRICS.init_list[vertical_scroller.active_line_index].is_backing = not self.app.CURR_LYRICS.init_list[vertical_scroller.active_line_index].is_backing
+        vertical_scroller.update_props()
+    
+    def action_set_vocal_primary(self):
+        vertical_scroller: VerticalScroller = self.query_one(VerticalScroller)
+        self.app.CURR_LYRICS.init_list[vertical_scroller.active_line_index].vocal = Vocal.PRIMARY
+        vertical_scroller.update_props()
+
+    def action_set_vocal_secondary(self):
+        vertical_scroller: VerticalScroller = self.query_one(VerticalScroller)
+        self.app.CURR_LYRICS.init_list[vertical_scroller.active_line_index].vocal = Vocal.SECONDARY
+        vertical_scroller.update_props()
+
+    def action_set_vocal_standard(self):
+        vertical_scroller: VerticalScroller = self.query_one(VerticalScroller)
+        self.app.CURR_LYRICS.init_list[vertical_scroller.active_line_index].vocal = Vocal.STANDARD
+        vertical_scroller.update_props()
+
 
     def on_button_pressed(self, event: Button.Pressed):
         
