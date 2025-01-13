@@ -19,17 +19,12 @@ def export_as_swlrc(lyrics:Lyrics) -> dict:
     for line in lyrics.init_list:
         line:Line = line
         _lead_list = []
-        for i,element in enumerate(line.elements):
+        for element in line.elements:
             element:VocalElement = element
-            _is_part_of_word = False
-            try:
-                if line.elements[i+1].word_index == element.word_index:
-                    _is_part_of_word = True
-            except IndexError:
-                pass            
+         
             _lead_list.append({
                 "Text": element.text,
-                    "IsPartOfWord": _is_part_of_word,
+                    "IsPartOfWord": element.is_part_of_word,
                     "StartTime": element.start_time,
                     "EndTime": element.end_time
             })

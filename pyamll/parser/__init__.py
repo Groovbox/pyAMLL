@@ -10,9 +10,9 @@ class Vocal(Enum):
 
 @dataclass
 class VocalElement:
-    word_index: int
     text: str
     line_index:int
+    is_part_of_word:bool = False
     is_explicit: bool = False
     start_time: float = 0
     end_time: float = 0
@@ -47,13 +47,14 @@ class Line:
     def __str__(self):
         _str = ""
 
-        index = 0
+        part_of_word = False
         for i in range(len(self.elements)):
-            if self.elements[i].word_index > index:
-                _str += " "
-                index = self.elements[i].word_index
             _str += str(self.elements[i])
-        return _str
+            part_of_word = self.elements[i].is_part_of_word
+            if not part_of_word:
+                _str+=" "
+
+        return _str.strip()
     
 class Lyrics(list):
     element_map = []
@@ -105,13 +106,15 @@ def process_lyrics(lyrics_str:str) -> Lyrics:
             if word.strip() == "":
                 continue
 
+            # if / in word like heart/beat then the first word will have the bool but not last
             if '/' in word:
                 syllables = word.split('/')
                 for syllable_counter in range(len(syllables)):
-                    line.elements.append(VocalElement(word_index=word_counter, text=syllables[syllable_counter], line_index=len(line_objects)))
+                    line.elements.append(
+                        VocalElement(text=syllables[syllable_counter], is_part_of_word=(syllable_counter != len(syllables)-1) ,line_index=len(line_objects)))
                 continue
             
-            line.elements.append(VocalElement(word_index=word_counter, text=word, line_index=len(line_objects)))
+            line.elements.append(VocalElement(text=word, line_index=len(line_objects)))
 
         line_objects.append(line)
     return Lyrics(line_objects)
